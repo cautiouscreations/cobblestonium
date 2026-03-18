@@ -49,9 +49,7 @@
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
     if (isIOS && !isStandalone) {
-      while (true) {
         alert('To play this on iOS, tap the share icon and then "Add to Home Screen".');
-      }
     }
 
     if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
