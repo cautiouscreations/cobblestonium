@@ -1177,20 +1177,20 @@ void Minecraft::setSize(int w, int h) {
 
 	if (width >= 1000) {
         #ifdef __APPLE__
-            Gui::GuiScale = (width > 2000)? 8.0f : 4.0f;
+            Gui::GuiScale = (width > 2000)? 6.0f : 3.0f;
         #else
-            Gui::GuiScale = 4.0f;
+            Gui::GuiScale = 3.0f;
         #endif
     }
 	else if (width >= 800) {
 #ifdef __APPLE__
-        Gui::GuiScale = 4.0f;
+        Gui::GuiScale = 3.0f;
 #else
-		Gui::GuiScale = 3.0f;
+		Gui::GuiScale = 2.0f;
 #endif
     }
 	else if (width >= 400)
-		Gui::GuiScale = 2.0f;
+		Gui::GuiScale = 1.5f;
 	else
 		Gui::GuiScale = 1.0f;
 
