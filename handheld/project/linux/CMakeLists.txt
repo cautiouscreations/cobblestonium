@@ -94,6 +94,15 @@ if(EMSCRIPTEN)
     target_link_libraries(cobblestonium PRIVATE
         raknet
     )
+
+    add_custom_command(TARGET cobblestonium POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${PROJECT_SOURCE_DIR}/manifest.webmanifest"
+            "$<TARGET_FILE_DIR:cobblestonium>/manifest.webmanifest"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${PROJECT_SOURCE_DIR}/service-worker.js"
+            "$<TARGET_FILE_DIR:cobblestonium>/service-worker.js"
+    )
 else()
     target_link_libraries(cobblestonium PRIVATE
         raknet

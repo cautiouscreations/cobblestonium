@@ -273,6 +273,7 @@ static int handleEvents() {
             Multitouch::feed(0, 0, x, y, 0);
             Mouse::feed(0, 0, x, y, event.motion.xrel, event.motion.yrel);
         }
+
     }
 
     return 0;

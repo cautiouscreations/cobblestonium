@@ -191,7 +191,6 @@ void StartMenuScreen::tick() {
 }
 
 void StartMenuScreen::buttonClicked(::Button* button) {
-
 	//if (button->id == bTest.id) {
 	//	minecraft->selectLevel("Broken", "Broken", 1317199248);
 	//	minecraft->hostMultiplayer();

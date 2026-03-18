@@ -3,6 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <link rel="manifest" href="manifest.webmanifest">
   <title>Minecraft Web</title>
   <style>
     html, body {
@@ -15,8 +19,10 @@
 
     #canvas {
       display: block;
-      width: 100vw;
-      height: 100vh;
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       outline: none;
       touch-action: none;
     }
@@ -37,6 +43,14 @@
       },
       setStatus: function() {}
     };
+
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('./service-worker.js').catch(function(error) {
+          console.error('Service worker registration failed:', error);
+        });
+      });
+    }
   </script>
   {{{ SCRIPT }}}
 </body>
