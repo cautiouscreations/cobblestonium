@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 2.8.7)
+cmake_minimum_required(VERSION 3.23)
+project(dedicated_server)
 find_package (Threads)
 include_directories("${PROJECT_SOURCE_DIR}/../lib_projects/raknet/jni/RaknetSources")
 add_subdirectory("${PROJECT_SOURCE_DIR}/../lib_projects/raknet/jni" "${CMAKE_CURRENT_BINARY_DIR}/raknet")
@@ -151,6 +152,6 @@ set(CompileFiles ../../src/main.cpp
 ../../src/world/level/tile/entity/TileEntity.cpp
 ../../src/world/level/tile/entity/FurnaceTileEntity.cpp
 ../../src/world/phys/HitResult.cpp)
-message(${CMAKE_LIBRARY_ARCHITECTURE})
+message("CMAKE_LIBRARY_ARCHITECTURE: ${CMAKE_LIBRARY_ARCHITECTURE}")
 add_executable(mcpe_server ${CompileFiles})
 target_link_libraries(mcpe_server raknet ${CMAKE_THREAD_LIBS_INIT})
