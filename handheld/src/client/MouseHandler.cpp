@@ -3,7 +3,8 @@
 
 #if defined(RPI)
 #include <SDL/SDL.h>
-#elif defined(LINUX)
+#elif defined(LINUX) || defined(WEB)
+
 #include <SDL2/SDL.h>
 #endif
 
@@ -30,7 +31,8 @@ void MouseHandler::grab() {
 	//LOGI("Grabbing input!\n");
 	SDL_WM_GrabInput(SDL_GRAB_ON);
 	SDL_ShowCursor(0);
-#elif defined(LINUX)
+#elif defined(LINUX) || defined(WEB)
+
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 	SDL_ShowCursor(SDL_DISABLE);
 #endif
@@ -41,7 +43,8 @@ void MouseHandler::release() {
 	//LOGI("Releasing input!\n");
 	SDL_WM_GrabInput(SDL_GRAB_OFF);
 	SDL_ShowCursor(1);
-#elif defined(LINUX)
+#elif defined(LINUX) || defined(WEB)
+
 	SDL_SetRelativeMouseMode(SDL_FALSE);
 	SDL_ShowCursor(SDL_ENABLE);
 #endif

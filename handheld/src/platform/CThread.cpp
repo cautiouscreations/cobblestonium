@@ -25,7 +25,7 @@
 			&m_threadID        // pointer to receive thread ID
 		);
 	#endif
-	#if defined(LINUX) || defined(ANDROID) || defined(__APPLE__) || defined(POSIX)
+	#if defined(LINUX) || defined(ANDROID) || defined(__APPLE__) || defined(POSIX) || defined(WEB)
 		mp_threadFunc = (pthread_fn)threadFunc;
 
 		pthread_attr_init(&m_attributes);
@@ -53,7 +53,7 @@
 		#ifdef WIN32
 			Sleep( millis );
 		#endif
-		#if defined(LINUX) || defined(ANDROID) || defined(__APPLE__) || defined(POSIX)
+		#if defined(LINUX) || defined(ANDROID) || defined(__APPLE__) || defined(POSIX) || defined(WEB)
 			usleep(millis * 1000);
 		#endif
 	}
@@ -63,7 +63,7 @@
 	#ifdef WIN32
 		TerminateThread(m_threadHandle, 0);
 	#endif
-	#if defined(LINUX) || defined(ANDROID) || defined(__APPLE__) || defined(POSIX)
+	#if defined(LINUX) || defined(ANDROID) || defined(__APPLE__) || defined(POSIX) || defined(WEB)
 		pthread_join(m_thread, NULL);
 		pthread_attr_destroy(&m_attributes);
 	#endif

@@ -57,7 +57,8 @@ NinecraftApp::NinecraftApp()
 	_lastTickMs(0),
 	_frames(0)
 {
-    #if defined(ANDROID) || defined(__APPLE__) || defined(RPI) || defined(LINUX)
+    #if defined(ANDROID) || defined(__APPLE__) || defined(RPI) || defined(LINUX) || defined(WEB)
+
         signal(SIGPIPE, SIG_IGN);
     #endif
 }

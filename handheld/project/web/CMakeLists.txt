@@ -36,7 +36,7 @@ list(REMOVE_ITEM CLIENT_SOURCES ${SRC_RAKNET_SOURCES})
 add_executable(cobblestonium ${CLIENT_SOURCES})
 set_target_properties(cobblestonium PROPERTIES SUFFIX ".html")
 
-target_compile_definitions(cobblestonium PRIVATE LINUX POSIX NO_NETWORK OPENGL_ES)
+target_compile_definitions(cobblestonium PRIVATE POSIX NO_NETWORK OPENGL_ES WEB)
 target_include_directories(cobblestonium PRIVATE
     "${SRC_DIR}"
     "${RAKNET_DIR}"

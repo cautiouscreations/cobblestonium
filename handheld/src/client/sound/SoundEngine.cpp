@@ -30,7 +30,8 @@ void SoundEngine::init( Minecraft* mc, Options* options )
 		loadLibrary();
 	}
 
-#if !defined(PRE_ANDROID23) && !defined(__APPLE__) && !defined(RPI) && !defined(LINUX)
+#if !defined(PRE_ANDROID23) && !defined(__APPLE__) && !defined(RPI) && !defined(LINUX) && !defined(WEB)
+
 	sounds.add("step.cloth", SA_cloth1);
 	sounds.add("step.cloth", SA_cloth2);
 	sounds.add("step.cloth", SA_cloth3);
@@ -223,7 +224,8 @@ void SoundEngine::playUI(const std::string& name, float volume, float pitch) {
 		soundSystem.playAt(sound, 0, 0, 0, volume, pitch);
 	}
 }
-#elif defined(RPI) || defined(LINUX)
+#elif defined(RPI) || defined(LINUX) || defined(WEB)
+
 void SoundEngine::play(const std::string& name, float x, float y, float z, float volume, float pitch) {}
 void SoundEngine::playUI(const std::string& name, float volume, float pitch) {}
 #else

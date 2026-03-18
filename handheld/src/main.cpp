@@ -39,7 +39,8 @@
 
 #ifdef __EMSCRIPTEN__
     #include "main_web.h"
-#elif defined(LINUX)
+#elif defined(LINUX) || defined(WEB)
+
     #include "main_linux.h"
 #endif
 

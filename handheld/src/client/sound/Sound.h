@@ -61,7 +61,8 @@ private:
 	mutable char* buffer;
 };
 
-#if !defined(PRE_ANDROID23) && !defined(__APPLE__) && !defined(RPI) && !defined(LINUX)
+#if !defined(PRE_ANDROID23) && !defined(__APPLE__) && !defined(RPI) && !defined(LINUX) && !defined(WEB)
+
 
 extern SoundDesc SA_cloth1;
 extern SoundDesc SA_cloth2;

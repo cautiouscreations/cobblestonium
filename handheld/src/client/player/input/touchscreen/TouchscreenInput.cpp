@@ -158,14 +158,14 @@ void TouchscreenInput_TestFps::onConfigChanged(const Config& c) {
 	xx = BaseX + 2 * Bw; yy = BaseY + Bh;
 	_model.addArea(AREA_DPAD_E, aRight = new RectangleArea(xx, yy, xx+Bw, yy+Bh));
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(WEB) || defined(LINUX)
     float maxPixels = _minecraft->pixelCalc.millimetersToPixels(10);
     float btnSize = Mth::Min(18 * Gui::GuiScale, maxPixels);
 	_model.addArea(AREA_PAUSE, aPause = new RectangleArea(w - 4 - btnSize,
                                                           4,
                                                           w - 4,
                                                           4 + btnSize));
-#endif /* __APPLE__ */
+#endif
 
 	//rebuild();
 }
@@ -300,14 +300,14 @@ void TouchscreenInput_TestFps::tick( Player* player )
 			setButton = true;
 			xa -= 1;
 		}
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(WEB) || defined(LINUX)
 		else if (areaId == AREA_PAUSE) {
 			if (Multitouch::isReleased(p)) {
                 _minecraft->soundEngine->playUI("random.click", 1, 1);
 				_minecraft->screenChooser.setScreen(SCREEN_PAUSE);
             }
 		}
-#endif /*__APPLE__*/
+#endif
 		_buttons[areaId - AREA_DPAD_FIRST] = setButton;
 	}
 
@@ -491,14 +491,14 @@ void TouchscreenInput_TestFps::rebuild() {
 	}
 	
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(WEB) || defined(LINUX)
 	if (!_minecraft->screen) {
 		if (isButtonDown(AREA_PAUSE))  t.colorABGR(cPressedPause);
 		else						   t.colorABGR(cReleasedPause);
 		
         drawRectangleArea(t, aPause, 200, 64, 18.0f);
 	}
-#endif /*__APPLE__*/
+#endif
 //t.end(true, _bufferId);
 	//return;
 

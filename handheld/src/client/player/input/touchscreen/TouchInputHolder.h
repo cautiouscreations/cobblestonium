@@ -129,9 +129,9 @@ public:
 			_area.include(&screenArea);
 			_area.exclude(&moveArea);
 			_area.exclude(&inventoryArea);
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(WEB) || defined(LINUX)
             _area.exclude(&pauseArea);
-#endif /*__APPLE__*/
+#endif
 			//LOGI("Movearea: %f %f %f% f\n", moveArea._x0, moveArea._x1, moveArea._y0, moveArea._y1);
 
 			_model.clear();
@@ -426,7 +426,7 @@ public:
 	virtual void onConfigChanged(const Config& c) {
 		_move.onConfigChanged(c);
 		_turnBuild.moveArea = _move.getRectangleArea();
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(WEB) || defined(LINUX)
 		_turnBuild.pauseArea = _move.getPauseRectangleArea();
 #endif
 		_turnBuild.inventoryArea = _mc->gui.getRectangleArea( _mc->options.isLeftHanded? 1 : -1 );
