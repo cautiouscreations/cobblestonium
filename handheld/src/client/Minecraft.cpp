@@ -290,11 +290,12 @@ void Minecraft::setLevel(Level* level, const std::string& message /* ="" */, Loc
 		}
 		this->level = level;
 		_hasSignaledGeneratingLevelFinished = false;
-#ifdef STANDALONE_SERVER
+
+		if (!level->isClientSide) {
+			progressStageStatusId = 1;
+			progressStagePercentage = 0;
+		}
 		const bool threadedLevelCreation = false;
-#else
-		const bool threadedLevelCreation = true;
-#endif
 
 		if (threadedLevelCreation) {
 			// Threaded
