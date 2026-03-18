@@ -10,7 +10,7 @@ typedef std::map<int, bool> FreeSectorMap;
 class RegionFile
 {
 public:
-	RegionFile(const std::string& basePath);
+	RegionFile(const std::string& filename);
 	virtual ~RegionFile();
 
 	bool open();

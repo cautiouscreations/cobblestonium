@@ -42,13 +42,10 @@ public:
 	}
 
     bool fits(int x, int z) {
-        return (x >= 0 && z >= 0 && x < CHUNK_CACHE_WIDTH && z < CHUNK_CACHE_WIDTH);
+        return true;
     }
 
     bool hasChunk(int x, int z) {
-		// with a fixed world size, chunks outside the fitting area are always available (emptyChunks)
-        if (!fits(x, z)) return true;
-
         if (x == xLast && z == zLast && last != NULL) {
             return true;
         }
@@ -69,8 +66,6 @@ public:
 		if (x == xLast && z == zLast && last != NULL) {
             return last;
         }
-		if (!fits(x, z)) return emptyChunk;
-        //if (!level->isFindingSpawn && !fits(x, z)) return emptyChunk;
         int xs = x & (CHUNK_CACHE_WIDTH - 1);
         int zs = z & (CHUNK_CACHE_WIDTH - 1);
         int slot = xs + zs * CHUNK_CACHE_WIDTH;
@@ -138,7 +133,6 @@ public:
 	}
 
     void postProcess(ChunkSource* parent, int x, int z) {
-		if (!fits(x, z)) return;
         LevelChunk* chunk = getChunk(x, z);
         if (!chunk->terrainPopulated) {
             chunk->terrainPopulated = true;
@@ -184,7 +178,15 @@ public:
     //}
 
     bool tick() {
-        if (storage != NULL) storage->tick();
+        if (storage != NULL) {
+            for (int i = 0; i < CHUNK_CACHE_WIDTH * CHUNK_CACHE_WIDTH; i++) {
+                if (chunks[i] && chunks[i]->unsaved) {
+                    storage->markUnsaved(chunks[i]);
+                    chunks[i]->unsaved = false;
+                }
+            }
+            storage->tick();
+        }
         return source->tick();
     }
 
@@ -198,23 +200,19 @@ public:
 	
 	void saveAll(bool onlyUnsaved) {
 		if (storage != NULL) {
-			std::vector<LevelChunk*> chunks;
-			for (int z = 0; z < CHUNK_CACHE_WIDTH; ++z)
-			for (int x = 0; x < CHUNK_CACHE_WIDTH; ++x) {
-				LevelChunk* chunk = level->getChunk(x, z);
-				if (!onlyUnsaved || chunk->shouldSave(false))
-					chunks.push_back( chunk );
+			std::vector<LevelChunk*> chunkList;
+			for (int i = 0; i < CHUNK_CACHE_WIDTH * CHUNK_CACHE_WIDTH; i++)
+			{
+				LevelChunk* chunk = chunks[i];
+				if (chunk != NULL && chunk != emptyChunk && (!onlyUnsaved || chunk->shouldSave(false)))
+					chunkList.push_back( chunk );
 			}
-			storage->saveAll(level, chunks);
+			storage->saveAll(level, chunkList);
 		}
 	}
 private:
     LevelChunk* load(int x, int z) {
         if (storage == NULL) return emptyChunk;
-		if (x < 0 || x >= CHUNK_CACHE_WIDTH || z < 0 || z >= CHUNK_CACHE_WIDTH)
-		{
-			return emptyChunk;
-		}
         //try {
             LevelChunk* levelChunk = storage->load(level, x, z);
             if (levelChunk != NULL) {

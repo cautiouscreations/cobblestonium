@@ -7,6 +7,10 @@
 
 #include <vector>
 #include <list>
+#include <map>
+
+#include "../../../raknet/RakNetTypes.h"
+#include "../../../raknet/GetTime.h"
 
 //#include "com/mojang/nbt/CompoundTag.h"
 #include "LevelStorage.h"
@@ -19,7 +23,7 @@ class RegionFile;
 
 typedef struct UnsavedLevelChunk
 {
-	int				pos;
+	int				x, z;
 	RakNet::TimeMS	addedToList;
 	LevelChunk*		chunk;
 } UnsavedLevelChunk;
@@ -68,13 +72,15 @@ public:
     void saveAll(Level* level, std::vector<LevelChunk*>& levelChunks);
 
 	virtual void tick();
+	virtual void markUnsaved(LevelChunk* levelChunk);
 	virtual void flush() {}
 private:
+    RegionFile* getRegionFile(int x, int z, bool forEntities);
 	std::string levelId;
 	std::string levelPath;
 	LevelData* loadedLevelData;
-	RegionFile* regionFile;
-	RegionFile* entitiesFile;
+	std::map<long long, RegionFile*> regionFiles;
+	std::map<long long, RegionFile*> entitiesFiles;
 
 	Level* level;
 	int tickCount;

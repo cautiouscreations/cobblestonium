@@ -236,9 +236,9 @@ std::string CommandServer::parse(ConnectedClient& client, const std::string& s) 
 		if (x0 < 0) x0 = 0;
 		if (y0 < 0) y0 = 0;
 		if (z0 < 0) z0 = 0;
-		if (x1 >= LEVEL_WIDTH ) x1 = LEVEL_WIDTH  - 1;
+		// if (x1 >= LEVEL_WIDTH ) x1 = LEVEL_WIDTH  - 1;
 		if (y1 >= LEVEL_HEIGHT) y1 = LEVEL_HEIGHT - 1;
-		if (z1 >= LEVEL_DEPTH ) z1 = LEVEL_DEPTH  - 1;
+		// if (z1 >= LEVEL_DEPTH ) z1 = LEVEL_DEPTH  - 1;
 
 		for (int y = y0; y <= y1; ++y)
 		for (int z = z0; z <= z1; ++z)

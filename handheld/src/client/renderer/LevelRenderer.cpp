@@ -65,7 +65,7 @@ LevelRenderer::LevelRenderer( Minecraft* mc)
 	destroyProgress(0)
 {
 #ifdef OPENGL_ES
-	int maxChunksWidth = 2 * LEVEL_WIDTH / CHUNK_SIZE + 1;
+	int maxChunksWidth = 64; // Max width of rendering grid
 	numListsOrBuffers = maxChunksWidth * maxChunksWidth * (128/CHUNK_SIZE) * 3;
 	chunkBuffers = new GLuint[numListsOrBuffers];
 	glGenBuffers2(numListsOrBuffers, chunkBuffers);
@@ -76,7 +76,7 @@ LevelRenderer::LevelRenderer( Minecraft* mc)
 	generateSky();
 #else
 	int maxChunksWidth = 1024 / CHUNK_SIZE;
-	numListsOrBuffers = maxChunksWidth * maxChunksWidth * maxChunksWidth * 3;
+	numListsOrBuffers = maxChunksWidth * maxChunksWidth * (128/CHUNK_SIZE) * 3;
 	chunkLists = glGenLists(numListsOrBuffers);
 #endif
 }

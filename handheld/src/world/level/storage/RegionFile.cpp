@@ -13,13 +13,10 @@ static void logAssert(int actual, int expected) {
 	}
 }
 
-RegionFile::RegionFile(const std::string& basePath)
-:	file(NULL)
+RegionFile::RegionFile(const std::string& filename)
+:	file(NULL),
+	filename(filename)
 {
-	filename = basePath;
-	filename += "/";
-	filename += REGION_DAT_NAME;
-
 	offsets = new int[SECTOR_INTS];
 
 	emptyChunk = new int[SECTOR_INTS];

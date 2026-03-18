@@ -78,8 +78,6 @@ ExternalFileLevelStorage::ExternalFileLevelStorage(const std::string& levelId, c
 :	levelId(levelId),
 	levelPath(fullPath),
 	loadedLevelData(NULL),
-	regionFile(NULL),
-	entitiesFile(NULL),
 	tickCount(0),
 	lastSavedEntitiesTick(-999999),
 	level(NULL),
@@ -102,7 +100,12 @@ ExternalFileLevelStorage::ExternalFileLevelStorage(const std::string& levelId, c
 
 ExternalFileLevelStorage::~ExternalFileLevelStorage()
 {
-	delete regionFile;
+	for (std::map<long long, RegionFile*>::iterator it = regionFiles.begin(); it != regionFiles.end(); ++it) {
+		delete it->second;
+	}
+	for (std::map<long long, RegionFile*>::iterator it = entitiesFiles.begin(); it != entitiesFiles.end(); ++it) {
+		delete it->second;
+	}
 	delete loadedLevelData;
 }
 
@@ -272,10 +275,6 @@ bool ExternalFileLevelStorage::readPlayerData(const std::string& filename, Level
 
 			// Fix coordinates
 			Vec3& pos = dest.playerData.pos;
-			if (pos.x < 0.5f) pos.x = 0.5f;
-			if (pos.z < 0.5f) pos.z = 0.5f;
-			if (pos.x > (LEVEL_WIDTH - 0.5f)) pos.x = LEVEL_WIDTH - 0.5f;
-			if (pos.z > (LEVEL_DEPTH - 0.5f)) pos.z = LEVEL_DEPTH - 0.5f;
 			if (pos.y < 0) pos.y = 64;
 
 			dest.playerDataVersion = version;
@@ -291,38 +290,6 @@ void ExternalFileLevelStorage::tick()
 	tickCount++;
 	if ((tickCount % 50) == 0 && level)
 	{
-		// look for chunks that needs to be saved
-		for (int z = 0; z < CHUNK_CACHE_WIDTH; z++)
-		{
-			for (int x = 0; x < CHUNK_CACHE_WIDTH; x++)
-			{
-				LevelChunk* chunk = level->getChunk(x, z);
-				if (chunk && chunk->unsaved)
-				{
-					int pos = x + z * CHUNK_CACHE_WIDTH;
-					UnsavedChunkList::iterator prev = unsavedChunkList.begin();
-					for ( ; prev != unsavedChunkList.end(); ++prev)
-					{
-						if ((*prev).pos == pos)
-						{
-							// the chunk has been modified again, so update its time
-							(*prev).addedToList = RakNet::GetTimeMS();
-							break;
-						}
-					}
-					if (prev == unsavedChunkList.end())
-					{
-						UnsavedLevelChunk unsaved;
-						unsaved.pos = pos;
-						unsaved.addedToList = RakNet::GetTimeMS();
-						unsaved.chunk = chunk;
-						unsavedChunkList.push_back(unsaved);
-					}
-					chunk->unsaved = false; // not actually saved, but in our working list at least
-				}
-			}
-		}
-
         savePendingUnsavedChunks(2);
 	}
 	if (tickCount - lastSavedEntitiesTick > (60 * SharedConstants::TicksPerSecond)) {
@@ -330,18 +297,54 @@ void ExternalFileLevelStorage::tick()
 	}
 }
 
-void ExternalFileLevelStorage::save(Level* level, LevelChunk* levelChunk)
+void ExternalFileLevelStorage::markUnsaved(LevelChunk* chunk)
 {
-	if (!regionFile)
+	UnsavedChunkList::iterator it = unsavedChunkList.begin();
+	for ( ; it != unsavedChunkList.end(); ++it)
 	{
-		regionFile = new RegionFile(levelPath);
-		if (!regionFile->open())
+		if ((*it).x == chunk->x && (*it).z == chunk->z)
 		{
-			delete regionFile;
-			regionFile = NULL;
-			return;
+			// the chunk has been modified again, so update its time
+			(*it).addedToList = RakNet::GetTimeMS();
+			break;
 		}
 	}
+	if (it == unsavedChunkList.end())
+	{
+		UnsavedLevelChunk unsaved;
+		unsaved.x = chunk->x;
+		unsaved.z = chunk->z;
+		unsaved.addedToList = RakNet::GetTimeMS();
+		unsaved.chunk = chunk;
+		unsavedChunkList.push_back(unsaved);
+	}
+}
+
+RegionFile* ExternalFileLevelStorage::getRegionFile(int x, int z, bool forEntities) {
+    int rx = x >> 5;
+    int rz = z >> 5;
+    long long key = ((long long)rx << 32) | (unsigned int)rz;
+    std::map<long long, RegionFile*>& files = forEntities ? entitiesFiles : regionFiles;
+    if (files.find(key) == files.end()) {
+        char buf[512];
+        if (forEntities)
+            sprintf(buf, "%s/entities.r.%d.%d.dat", levelPath.c_str(), rx, rz);
+        else
+            sprintf(buf, "%s/chunks.r.%d.%d.dat", levelPath.c_str(), rx, rz);
+        RegionFile* rf = new RegionFile(buf);
+        if (!rf->open()) {
+            delete rf;
+            return NULL;
+        }
+        files[key] = rf;
+    }
+    return files[key];
+}
+
+void ExternalFileLevelStorage::save(Level* level, LevelChunk* levelChunk)
+{
+	RegionFile* rf = getRegionFile(levelChunk->x, levelChunk->z, false);
+	if (!rf) return;
 
 	// Write chunk
 	RakNet::BitStream chunkData;
@@ -353,7 +356,7 @@ void ExternalFileLevelStorage::save(Level* level, LevelChunk* levelChunk)
 
 	chunkData.Write((const char*)levelChunk->updateMap, CHUNK_COLUMNS);
 
-	regionFile->writeChunk(levelChunk->x, levelChunk->z, chunkData);
+	rf->writeChunk(levelChunk->x & 31, levelChunk->z & 31, chunkData);
 
 	// Write entities
 
@@ -363,19 +366,11 @@ void ExternalFileLevelStorage::save(Level* level, LevelChunk* levelChunk)
 
 LevelChunk* ExternalFileLevelStorage::load(Level* level, int x, int z)
 {
-	if (!regionFile)
-	{
-		regionFile = new RegionFile(levelPath);
-		if (!regionFile->open())
-		{
-			delete regionFile;
-			regionFile = NULL;
-			return NULL;
-		}
-	}
+	RegionFile* rf = getRegionFile(x, z, false);
+	if (!rf) return NULL;
 
 	RakNet::BitStream* chunkData = NULL;
-	if (!regionFile->readChunk(x, z, &chunkData))
+	if (!rf->readChunk(x & 31, z & 31, &chunkData))
 	{
 		//LOGI("Failed to read data for %d, %d\n", x, z);
 		return NULL;

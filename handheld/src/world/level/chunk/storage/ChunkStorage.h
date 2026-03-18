@@ -3,6 +3,9 @@
 
 //package net.minecraft.world.level.chunk.storage;
 
+#include <vector>
+#include <cstddef>
+
 class Level;
 class LevelChunk;
 
@@ -24,6 +27,7 @@ public:
 	}
     
 	virtual void tick() {}
+	virtual void markUnsaved(LevelChunk* levelChunk) {}
 	virtual void flush() {}
 };
 
