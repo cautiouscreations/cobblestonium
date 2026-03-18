@@ -149,6 +149,87 @@ static unsigned char transformKey(int key) {
     return 0;
 }
 
+struct QueuedTouchEvent {
+    char type;
+    short x;
+    short y;
+    char pointerId;
+};
+
+static QueuedTouchEvent g_touchQueue[64];
+static int g_touchQueueCount = 0;
+
+static void queueTouchEvent(char type, short x, short y, char pointerId) {
+    if (g_touchQueueCount < 64) {
+        g_touchQueue[g_touchQueueCount++] = {type, x, y, pointerId};
+    }
+}
+
+static void processQueuedTouchEvents() {
+    for (int i = 0; i < g_touchQueueCount; ++i) {
+        QueuedTouchEvent& e = g_touchQueue[i];
+        if (e.type == 1) {
+            Mouse::feed(1, 1, e.x, e.y);
+            Multitouch::feed(1, 1, e.x, e.y, e.pointerId);
+        } else if (e.type == 0) {
+            Mouse::feed(1, 0, e.x, e.y);
+            Multitouch::feed(1, 0, e.x, e.y, e.pointerId);
+        } else if (e.type == 2) {
+            Multitouch::feed(0, 0, e.x, e.y, e.pointerId);
+        }
+    }
+    g_touchQueueCount = 0;
+}
+
+EM_BOOL web_touch_start(int eventType, const EmscriptenTouchEvent* e, void* userData) {
+    (void)eventType;
+    (void)userData;
+    for (int i = 0; i < e->numTouches; ++i) {
+        const EmscriptenTouchPoint* t = &e->touches[i];
+        if (t->isChanged) {
+            short x = (short)t->clientX;
+            short y = (short)t->clientY;
+            char pointerId = (char)t->identifier;
+            queueTouchEvent(1, x, y, pointerId);
+        }
+    }
+    return EM_TRUE;
+}
+
+EM_BOOL web_touch_end(int eventType, const EmscriptenTouchEvent* e, void* userData) {
+    (void)eventType;
+    (void)userData;
+    for (int i = 0; i < e->numTouches; ++i) {
+        const EmscriptenTouchPoint* t = &e->touches[i];
+        if (t->isChanged) {
+            short x = (short)t->clientX;
+            short y = (short)t->clientY;
+            char pointerId = (char)t->identifier;
+            queueTouchEvent(0, x, y, pointerId);
+        }
+    }
+    return EM_TRUE;
+}
+
+EM_BOOL web_touch_move(int eventType, const EmscriptenTouchEvent* e, void* userData) {
+    (void)eventType;
+    (void)userData;
+    for (int i = 0; i < e->numTouches; ++i) {
+        const EmscriptenTouchPoint* t = &e->touches[i];
+        if (t->isChanged) {
+            short x = (short)t->clientX;
+            short y = (short)t->clientY;
+            char pointerId = (char)t->identifier;
+            queueTouchEvent(2, x, y, pointerId);
+        }
+    }
+    return EM_TRUE;
+}
+
+EM_BOOL web_touch_cancel(int eventType, const EmscriptenTouchEvent* e, void* userData) {
+    return web_touch_end(eventType, e, userData);
+}
+
 static int handleEvents() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -202,6 +283,7 @@ static int handleEvents() {
         }
     }
 
+    processQueuedTouchEvents();
     return 0;
 }
 
@@ -260,6 +342,11 @@ int main(int argc, char** argv) {
     context.platform = &platform;
 
     emscripten_request_fullscreen("#canvas", EM_FALSE);
+
+    emscripten_set_touchstart_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_TRUE, web_touch_start);
+    emscripten_set_touchend_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_TRUE, web_touch_end);
+    emscripten_set_touchmove_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_TRUE, web_touch_move);
+    emscripten_set_touchcancel_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_TRUE, web_touch_cancel);
 
     double cssW = 0.0;
     double cssH = 0.0;
