@@ -9,11 +9,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#include <emscripten/html5.h>
-#endif
-
 #include "App.h"
 #include "AppPlatform_linux.h"
 #include "NinecraftApp.h"
@@ -31,118 +26,6 @@ void AppPlatform_linux_setScreenSize(int width, int height);
 static SDL_Window* g_window = NULL;
 static SDL_GLContext g_glContext = NULL;
 static bool g_app_window_normal = true;
-
-#ifdef __EMSCRIPTEN__
-EM_JS(void, web_setup_canvas_and_logs, (), {
-    if (typeof Module !== 'undefined') {
-        Module.print = function(text) { console.log(text); };
-        Module.printErr = function(text) { console.error(text); };
-    }
-
-    if (typeof document === 'undefined') {
-        return;
-    }
-
-    var body = document.body;
-    if (!body) {
-        return;
-    }
-
-    body.style.margin = '0';
-    body.style.background = '#000';
-    body.style.overflow = 'hidden';
-
-    var canvas = Module.canvas || document.querySelector('canvas');
-    if (!canvas) {
-        return;
-    }
-
-    canvas.style.display = 'block';
-    canvas.style.width = '100vw';
-    canvas.style.height = '100vh';
-    canvas.style.outline = 'none';
-});
-
-EM_JS(void, webfs_init, (), {
-    if (typeof FS === 'undefined' || typeof IDBFS === 'undefined') {
-        return;
-    }
-
-    if (!Module.__mcStorageState) {
-        Module.__mcStorageState = {
-            mounted: false,
-            ready: false,
-            syncing: false,
-            lastError: 0
-        };
-    }
-
-    var state = Module.__mcStorageState;
-    try {
-        FS.mkdir('/persistent');
-    } catch (e) {}
-
-    if (!state.mounted) {
-        FS.mount(IDBFS, {}, '/persistent');
-        state.mounted = true;
-    }
-
-    state.syncing = true;
-    state.ready = false;
-    FS.syncfs(true, function(err) {
-        state.syncing = false;
-        state.lastError = err ? 1 : 0;
-        state.ready = true;
-    });
-
-    var flush = function() {
-        if (!state.mounted || state.syncing) {
-            return;
-        }
-        state.syncing = true;
-        FS.syncfs(false, function(err) {
-            state.syncing = false;
-            state.lastError = err ? 1 : 0;
-        });
-    };
-
-    if (!Module.__mcStorageHooksInstalled) {
-        Module.__mcStorageHooksInstalled = true;
-        if (typeof document !== 'undefined') {
-            document.addEventListener('visibilitychange', function() {
-                if (document.visibilityState === 'hidden') {
-                    flush();
-                }
-            });
-        }
-        if (typeof window !== 'undefined') {
-            window.addEventListener('beforeunload', flush);
-            window.addEventListener('pagehide', flush);
-        }
-    }
-});
-
-EM_JS(int, webfs_ready, (), {
-    return Module.__mcStorageState && Module.__mcStorageState.ready ? 1 : 0;
-});
-
-EM_JS(void, webfs_flush, (), {
-    if (!Module.__mcStorageState) {
-        return;
-    }
-
-    var state = Module.__mcStorageState;
-    if (!state.mounted || state.syncing) {
-        return;
-    }
-
-    state.syncing = true;
-    FS.syncfs(false, function(err) {
-        state.syncing = false;
-        state.lastError = err ? 1 : 0;
-    });
-});
-#endif
 
 static bool fileExists(const std::string& path) {
     struct stat st;
@@ -273,17 +156,12 @@ static int handleEvents() {
             Multitouch::feed(0, 0, x, y, 0);
             Mouse::feed(0, 0, x, y, event.motion.xrel, event.motion.yrel);
         }
-
     }
 
     return 0;
 }
 
 int main(int argc, char** argv) {
-#ifdef __EMSCRIPTEN__
-    web_setup_canvas_and_logs();
-#endif
-
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::printf("Couldn't initialize SDL2: %s\n", SDL_GetError());
         return -1;
@@ -293,25 +171,15 @@ int main(int argc, char** argv) {
     int height = 480;
     AppPlatform_linux_setScreenSize(width, height);
 
-#ifdef __EMSCRIPTEN__
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-#else
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-#endif
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 
     g_window = SDL_CreateWindow(
         "Cobblestonium",
-#ifdef __EMSCRIPTEN__
-        0,
-        0,
-#else
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-#endif
         width,
         height,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
@@ -335,12 +203,8 @@ int main(int argc, char** argv) {
     switchToAssetRoot(argv[0]);
 
     MAIN_CLASS* app = new MAIN_CLASS();
-#ifdef __EMSCRIPTEN__
-    std::string storagePath = "/persistent";
-#else
     std::string storagePath = getenv("HOME") ? getenv("HOME") : ".";
     storagePath += "/.minecraft/";
-#endif
     app->externalStoragePath = storagePath;
     app->externalCacheStoragePath = storagePath;
 
@@ -357,79 +221,6 @@ int main(int argc, char** argv) {
     context.doRender = false;
     context.platform = &platform;
 
-#ifdef __EMSCRIPTEN__
-    emscripten_request_fullscreen("#canvas", EM_FALSE);
-
-    double cssW = 0.0;
-    double cssH = 0.0;
-    if (emscripten_get_element_css_size("#canvas", &cssW, &cssH) == EMSCRIPTEN_RESULT_SUCCESS && cssW > 0.0 && cssH > 0.0) {
-        width = (int)cssW;
-        height = (int)cssH;
-        SDL_SetWindowSize(g_window, width, height);
-        AppPlatform_linux_setScreenSize(width, height);
-    }
-
-    webfs_init();
-
-    struct MainLoopState {
-        MAIN_CLASS* app;
-        AppContext context;
-        int width;
-        int height;
-        bool running;
-        bool inited;
-        int flushCounter;
-    };
-
-    MainLoopState* state = new MainLoopState();
-    state->app = app;
-    state->context = context;
-    state->width = width;
-    state->height = height;
-    state->running = true;
-    state->inited = false;
-    state->flushCounter = 0;
-
-    auto mainLoop = [](void* userData) {
-        MainLoopState* s = (MainLoopState*)userData;
-
-        if (!s->running || ((App*)s->app)->wantToQuit()) {
-            webfs_flush();
-            emscripten_cancel_main_loop();
-            return;
-        }
-
-        if (!s->inited) {
-            if (!webfs_ready()) {
-                return;
-            }
-
-            ((App*)s->app)->init(s->context);
-            ((App*)s->app)->setSize(s->width, s->height);
-            s->inited = true;
-            return;
-        }
-
-        int w = 0;
-        int h = 0;
-        SDL_GetWindowSize(g_window, &w, &h);
-        if (w > 0 && h > 0) {
-            AppPlatform_linux_setScreenSize(w, h);
-            ((App*)s->app)->setSize(w, h);
-        }
-
-        s->running = handleEvents() == 0;
-        ((App*)s->app)->update();
-        SDL_GL_SwapWindow(g_window);
-
-        if (++s->flushCounter >= 300) {
-            webfs_flush();
-            s->flushCounter = 0;
-        }
-    };
-
-    emscripten_set_main_loop_arg(mainLoop, state, 0, 1);
-#else
     ((App*)app)->init(context);
     ((App*)app)->setSize(width, height);
 
@@ -451,7 +242,6 @@ int main(int argc, char** argv) {
             SDL_Delay(16);
         }
     }
-#endif
 
     delete app;
     SDL_GL_DeleteContext(g_glContext);

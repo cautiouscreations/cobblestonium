@@ -37,7 +37,9 @@
     #include "main_rpi.h"
 #endif
 
-#ifdef LINUX
+#ifdef __EMSCRIPTEN__
+    #include "main_web.h"
+#elif defined(LINUX)
     #include "main_linux.h"
 #endif
 

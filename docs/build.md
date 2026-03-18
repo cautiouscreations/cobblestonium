@@ -4,7 +4,7 @@
 
 ```bash
 cmake -S handheld/project/linux -B handheld/build/linux-x64 -DCMAKE_BUILD_TYPE=Release
-cmake --build handheld/build/linux-x64 -j
+cmake --build handheld/build/linux-x64 -j$(nproc)
 ```
 
 Output: `handheld/build/linux-x64/cobblestonium`
@@ -12,8 +12,8 @@ Output: `handheld/build/linux-x64/cobblestonium`
 ## Web
 
 ```bash
-emcmake cmake -S handheld/project/linux -B handheld/build/web -DCMAKE_BUILD_TYPE=Release
-cmake --build handheld/build/web -j
+emcmake cmake -S handheld/project/web -B handheld/build/web -DCMAKE_BUILD_TYPE=Release
+cmake --build handheld/build/web -j$(nproc)
 ```
 
 Output: `handheld/build/web/cobblestonium.html`
