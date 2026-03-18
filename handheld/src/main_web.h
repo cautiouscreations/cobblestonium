@@ -156,11 +156,42 @@ struct QueuedTouchEvent {
     char pointerId;
 };
 
-static QueuedTouchEvent g_touchQueue[64];
+
+static long g_activeTouchIds[12] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+
+static char getInternalPointerId(long identifier, bool allocate) {
+    for (int i = 0; i < 12; ++i) {
+        if (g_activeTouchIds[i] == identifier) {
+            return (char)i;
+        }
+    }
+    if (allocate) {
+        for (int i = 0; i < 12; ++i) {
+            if (g_activeTouchIds[i] == -1) {
+                g_activeTouchIds[i] = identifier;
+                return (char)i;
+            }
+        }
+        return 11;
+    }
+    return -1;
+}
+
+static void releaseInternalPointerId(long identifier) {
+    for (int i = 0; i < 12; ++i) {
+        if (g_activeTouchIds[i] == identifier) {
+            g_activeTouchIds[i] = -1;
+            break;
+        }
+    }
+}
+
+static QueuedTouchEvent g_touchQueue[512];
 static int g_touchQueueCount = 0;
+static char g_primaryPointerId = -1;
 
 static void queueTouchEvent(char type, short x, short y, char pointerId) {
-    if (g_touchQueueCount < 64) {
+    if (g_touchQueueCount < 512) {
         g_touchQueue[g_touchQueueCount++] = {type, x, y, pointerId};
     }
 }
@@ -168,13 +199,22 @@ static void queueTouchEvent(char type, short x, short y, char pointerId) {
 static void processQueuedTouchEvents() {
     for (int i = 0; i < g_touchQueueCount; ++i) {
         QueuedTouchEvent& e = g_touchQueue[i];
+        bool isPrimary = (e.pointerId == g_primaryPointerId);
         if (e.type == 1) {
-            Mouse::feed(1, 1, e.x, e.y);
+            if (isPrimary) {
+                Mouse::feed(1, 1, e.x, e.y);
+            }
             Multitouch::feed(1, 1, e.x, e.y, e.pointerId);
         } else if (e.type == 0) {
-            Mouse::feed(1, 0, e.x, e.y);
+            if (isPrimary) {
+                Mouse::feed(1, 0, e.x, e.y);
+                g_primaryPointerId = -1;
+            }
             Multitouch::feed(1, 0, e.x, e.y, e.pointerId);
         } else if (e.type == 2) {
+            if (isPrimary) {
+                Mouse::feed(0, 0, e.x, e.y, 0, 0);
+            }
             Multitouch::feed(0, 0, e.x, e.y, e.pointerId);
         }
     }
@@ -189,7 +229,10 @@ EM_BOOL web_touch_start(int eventType, const EmscriptenTouchEvent* e, void* user
         if (t->isChanged) {
             short x = (short)t->clientX;
             short y = (short)t->clientY;
-            char pointerId = (char)t->identifier;
+            char pointerId = getInternalPointerId(t->identifier, true);
+            if (g_primaryPointerId == -1) {
+                g_primaryPointerId = pointerId;
+            }
             queueTouchEvent(1, x, y, pointerId);
         }
     }
@@ -204,8 +247,11 @@ EM_BOOL web_touch_end(int eventType, const EmscriptenTouchEvent* e, void* userDa
         if (t->isChanged) {
             short x = (short)t->clientX;
             short y = (short)t->clientY;
-            char pointerId = (char)t->identifier;
-            queueTouchEvent(0, x, y, pointerId);
+            char pointerId = getInternalPointerId(t->identifier, false);
+            if (pointerId != -1) {
+                queueTouchEvent(0, x, y, pointerId);
+                releaseInternalPointerId(t->identifier);
+            }
         }
     }
     return EM_TRUE;
@@ -219,8 +265,10 @@ EM_BOOL web_touch_move(int eventType, const EmscriptenTouchEvent* e, void* userD
         if (t->isChanged) {
             short x = (short)t->clientX;
             short y = (short)t->clientY;
-            char pointerId = (char)t->identifier;
-            queueTouchEvent(2, x, y, pointerId);
+            char pointerId = getInternalPointerId(t->identifier, false);
+            if (pointerId != -1) {
+                queueTouchEvent(2, x, y, pointerId);
+            }
         }
     }
     return EM_TRUE;
@@ -251,6 +299,7 @@ static int handleEvents() {
         }
 
         if (event.type == SDL_MOUSEWHEEL) {
+            if (event.wheel.which == SDL_TOUCH_MOUSEID) continue;
             int mx = 0;
             int my = 0;
             SDL_GetMouseState(&mx, &my);
@@ -262,6 +311,7 @@ static int handleEvents() {
         }
 
         if (event.type == SDL_MOUSEBUTTONDOWN) {
+            if (event.button.which == SDL_TOUCH_MOUSEID) continue;
             bool left = event.button.button == SDL_BUTTON_LEFT;
             char button = left ? 1 : 2;
             Mouse::feed(button, 1, event.button.x, event.button.y);
@@ -269,6 +319,7 @@ static int handleEvents() {
         }
 
         if (event.type == SDL_MOUSEBUTTONUP) {
+            if (event.button.which == SDL_TOUCH_MOUSEID) continue;
             bool left = event.button.button == SDL_BUTTON_LEFT;
             char button = left ? 1 : 2;
             Mouse::feed(button, 0, event.button.x, event.button.y);
@@ -276,6 +327,7 @@ static int handleEvents() {
         }
 
         if (event.type == SDL_MOUSEMOTION) {
+            if (event.motion.which == SDL_TOUCH_MOUSEID) continue;
             float x = (float)event.motion.x;
             float y = (float)event.motion.y;
             Multitouch::feed(0, 0, x, y, 0);

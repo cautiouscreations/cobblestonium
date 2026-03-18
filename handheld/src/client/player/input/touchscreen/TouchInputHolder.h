@@ -178,7 +178,7 @@ public:
 		if (isActive && !wasActive) {
 			_startTurnTime = now;
 			_totalMoveDelta = 0;
-			bool isInMovement = _lastPlayer? getSpeedSquared(_lastPlayer) > 0.01f/*.25f*/ : false;
+			bool isInMovement = false; // _lastPlayer? getSpeedSquared(_lastPlayer) > 0.01f/*.25f*/ : false;
 			//state = isInMovement? State_Turn : State_Deciding;
 			state = State_Deciding;
 			_canDestroy = !isInMovement;
@@ -226,7 +226,7 @@ public:
 				const float since = now - _startTurnTime;
 				if (state == State_Deciding && (since >= (0.001f*RemovalMilliseconds))) {
 					//LOGI("DECIDED!: %f\n", _totalMoveDelta);
-					bool isInMovement = _lastPlayer? getSpeedSquared(_lastPlayer) > 0.01f/*.25f*/ : false;
+					bool isInMovement = false; // _lastPlayer? getSpeedSquared(_lastPlayer) > 0.01f/*.25f*/ : false;
 					if (!_forceCanUse && (_totalMoveDelta > 20.0f || isInMovement)) {
 						state = State_Turn;
 					} else {
