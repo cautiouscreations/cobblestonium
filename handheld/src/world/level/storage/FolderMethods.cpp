@@ -33,8 +33,24 @@ bool createFolderIfNotExists( const char* name ) {
 	if (exists(name))
         return true;
 
+    std::string path(name);
+    size_t pos = 0;
+    while ((pos = path.find('/', pos +1)) != std::string::npos) {
+        std::string subdir = path.substr(0, pos);
+        if (!subdir.empty() && !exists(subdir.c_str())) {
+            _mkdir(subdir.c_str());
+        }
+    }
+    pos = 0;
+    while ((pos = path.find('\\', pos + 1)) != std::string::npos) {
+        std::string subdir = path.substr(0, pos);
+        if (!subdir.empty() && !exists(subdir.c_str())) {
+            _mkdir(subdir.c_str());
+        }
+    }
+
     int errorCode = 0;
-	if ((errorCode = _mkdir(name)) != 0) {
+    if ((errorCode = _mkdir(name)) != 0) {
         LOGI("FAILED to create folder %s, %d! Escape plan?\n", name, _errno());
         return false;
     }
