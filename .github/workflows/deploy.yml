@@ -65,7 +65,7 @@ jobs:
       - name: Split WASM and upload debug symbols
         run: |
           wasm-split handheld/build/web/index.wasm -d handheld/build/web/index.debug.wasm --strip
-          sentry-cli -auth-token ${{ secrets.SENTRY_AUTH_TOKEN }} debug-files upload -o ${{ secrets.SENTRY_ORG }} -p ${{ secrets.SENTRY_PROJECT }} handheld/build/web/index.debug.wasm
+          sentry-cli --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }} debug-files upload -o ${{ secrets.SENTRY_ORG }} -p ${{ secrets.SENTRY_PROJECT }} handheld/build/web/index.debug.wasm
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
