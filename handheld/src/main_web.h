@@ -227,8 +227,8 @@ EM_BOOL web_touch_start(int eventType, const EmscriptenTouchEvent* e, void* user
     for (int i = 0; i < e->numTouches; ++i) {
         const EmscriptenTouchPoint* t = &e->touches[i];
         if (t->isChanged) {
-            short x = (short)t->clientX;
-            short y = (short)t->clientY;
+            short x = (short)t->targetX;
+            short y = (short)t->targetY;
             char pointerId = getInternalPointerId(t->identifier, true);
             if (g_primaryPointerId == -1) {
                 g_primaryPointerId = pointerId;
@@ -245,8 +245,8 @@ EM_BOOL web_touch_end(int eventType, const EmscriptenTouchEvent* e, void* userDa
     for (int i = 0; i < e->numTouches; ++i) {
         const EmscriptenTouchPoint* t = &e->touches[i];
         if (t->isChanged) {
-            short x = (short)t->clientX;
-            short y = (short)t->clientY;
+            short x = (short)t->targetX;
+            short y = (short)t->targetY;
             char pointerId = getInternalPointerId(t->identifier, false);
             if (pointerId != -1) {
                 queueTouchEvent(0, x, y, pointerId);
@@ -263,8 +263,8 @@ EM_BOOL web_touch_move(int eventType, const EmscriptenTouchEvent* e, void* userD
     for (int i = 0; i < e->numTouches; ++i) {
         const EmscriptenTouchPoint* t = &e->touches[i];
         if (t->isChanged) {
-            short x = (short)t->clientX;
-            short y = (short)t->clientY;
+            short x = (short)t->targetX;
+            short y = (short)t->targetY;
             char pointerId = getInternalPointerId(t->identifier, false);
             if (pointerId != -1) {
                 queueTouchEvent(2, x, y, pointerId);
@@ -453,7 +453,9 @@ int main(int argc, char** argv) {
         int w = 0;
         int h = 0;
         SDL_GetWindowSize(g_window, &w, &h);
-        if (w > 0 && h > 0) {
+        if (w > 0 && h > 0 && (w != s->width || h != s->height)) {
+            s->width = w;
+            s->height = h;
             AppPlatform_linux_setScreenSize(w, h);
             ((App*)s->app)->setSize(w, h);
         }

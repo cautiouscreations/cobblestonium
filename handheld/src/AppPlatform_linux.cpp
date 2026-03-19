@@ -27,7 +27,11 @@ float AppPlatform_linux::getPixelsPerMillimeter() {
 }
 
 bool AppPlatform_linux::supportsTouchscreen() {
+#ifdef WEB
+    return true;
+#else
     return false;
+#endif
 }
 
 bool AppPlatform_linux::hasBuyButtonWhenInvalidLicense() {

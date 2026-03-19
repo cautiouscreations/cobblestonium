@@ -149,15 +149,8 @@ void ScrollingPane::render( int xm, int ym, float alpha ) {
 	}
 
 	// Render
-	//if (isSet(SF_Scissor)) {
-	//	glEnable2(GL_SCISSOR_TEST);
-	//	GLuint x = (GLuint)(screenScale * bbox.x);
-	//	GLuint y = 480 - (GLuint)(screenScale * (bbox.y + bbox.h));
-	//	GLuint w = (GLuint)(screenScale * bbox.w);
-	//	GLuint h = (GLuint)(screenScale * bbox.h);
-	//	glScissor(x, y, w, h);
-	//	LOGI("x, y, w, h: %d, %d, %d, %d\n", x, y, w, h);
-	//}
+	//LOGI("ScrollingPane::render: xm=%d, ym=%d, alpha=%.2f, bbox=(%d, %d, %d, %d)\n", 
+	//	xm, ym, alpha, bbox.x, bbox.y, bbox.w, bbox.h);
 
 	std::vector<GridItem> itemsToRender;
 	GridItem nw = getItemForPos(0, 0, false);
@@ -243,7 +236,7 @@ void ScrollingPane::handleUserInput() {
 	float y = Mouse::getY() * invScreenScale;
 	int   t = getTimeMs();
 	bool isInside = area.isInside(x, y);
-	//LOGI("inside? %d\n", isInside);
+	//LOGI("handleUserInput: isDown=%d, x=%.2f, y=%.2f, isInside=%d\n", isDown, x, y, isInside);
 
 	bool moved = (x != _lx || y != _ly);
 
