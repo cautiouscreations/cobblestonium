@@ -58,13 +58,8 @@ jobs:
         uses: matbour/setup-sentry-cli@v2
 
       - name: Download wasm-split
-        uses: robinraju/release-downloader@v1
-        with:
-          repository: 'getsentry/symbolicator'
-          latest: true
-          fileName: 'wasm-split-Linux-x86_64'
-          out-file-path: '/usr/local/bin/wasm-split'
         run: |
+          curl -sL https://github.com/getsentry/symbolicator/releases/latest/download/wasm-split-Linux-x86_64 -o /usr/local/bin/wasm-split
           chmod +x /usr/local/bin/wasm-split
 
       - name: Split WASM and upload debug symbols
