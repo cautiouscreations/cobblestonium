@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
 
       - name: Setup Emscripten
         uses: mymindstorm/setup-emsdk@v14
@@ -57,13 +57,23 @@ jobs:
       - name: Setup sentry-cli
         uses: matbour/setup-sentry-cli@v2
 
+      - name: Download wasm-split
+        -uses: robinraju/release-downloader@v1
+        with:
+          repository: 'getsentry/symbolicator'
+          latest: true
+          fileName: 'wasm-split-Linux-x86_64'
+          out-file-path: '/usr/local/bin/wasm-split'
+        run: |
+          chmod +x /usr/local/bin/wasm-split
+
       - name: Split WASM and upload debug symbols
         run: |
           wasm-split handheld/build/web/index.wasm -d handheld/build/web/index.debug.wasm --strip
           sentry-cli debug-files upload -o $SENTRY_ORG -p $SENTRY_PROJECT handheld/build/web/index.debug.wasm
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: handheld/build/web
 
@@ -76,4 +86,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v4.0.1
