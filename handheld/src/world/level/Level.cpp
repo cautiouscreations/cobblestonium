@@ -800,24 +800,27 @@ void Level::updateLightIfOtherThan(const LightLayer& layer, int x, int y, int z,
 }
 
 int Level::getBrightness(const LightLayer& layer, int x, int y, int z) {
-    if (y < 0 || y >= DEPTH/* || x < -MAX_LEVEL_SIZE || z < -MAX_LEVEL_SIZE || x >= MAX_LEVEL_SIZE || z > MAX_LEVEL_SIZE*/) {
+    if (y < 0 || y >= DEPTH) {
         return layer.surrounding;
     }
     int xc = x >> 4;
     int zc = z >> 4;
+    if (xc < -CHUNK_CACHE_WIDTH || xc >= CHUNK_CACHE_WIDTH || zc < -CHUNK_CACHE_WIDTH || zc >= CHUNK_CACHE_WIDTH) {
+        return layer.surrounding;
+    }
     if (!hasChunk(xc, zc)) return 0;
     LevelChunk* c = getChunk(xc, zc);
     return c->getBrightness(layer, x & 15, y, z & 15);
 }
 
 void Level::setBrightness(const LightLayer& layer, int x, int y, int z, int brightness) {
-    //if (x < -MAX_LEVEL_SIZE || z < -MAX_LEVEL_SIZE || x >= MAX_LEVEL_SIZE || z > MAX_LEVEL_SIZE) {
-    //    return;
-    //}
     if (y < 0) return;
     if (y >= DEPTH) return;
-    if (!hasChunk(x >> 4, z >> 4)) return;
-    LevelChunk* c = getChunk(x >> 4, z >> 4);
+    int xc = x >> 4;
+    int zc = z >> 4;
+    if (xc < -CHUNK_CACHE_WIDTH || xc >= CHUNK_CACHE_WIDTH || zc < -CHUNK_CACHE_WIDTH || zc >= CHUNK_CACHE_WIDTH) return;
+    if (!hasChunk(xc, zc)) return;
+    LevelChunk* c = getChunk(xc, zc);
     c->setBrightness(layer, x & 15, y, z & 15, brightness);
     for (unsigned int i = 0; i < _listeners.size(); i++) {
         _listeners[i]->tileBrightnessChanged(x, y, z);
@@ -1778,30 +1781,21 @@ bool Level::updateLights() {
     if (_maxRecurse >= 50) {
         return false;
     }
-	//static int _MaxSize = 0;
     _maxRecurse++;
-    //try {
-        int max = 500;
-        while ((int)_lightUpdates.size() > 0) {
-            if (--max <= 0)
-			{
-				_maxRecurse--;
-				return true;
-			}
-			LightUpdate l = _lightUpdates.back();
-            _lightUpdates.pop_back();
-			l.update(this);
-			//if ((int)_lightUpdates.size() > _MaxSize)
-			//{
-			//	LOGI("MAX_updsize_light: %d (%d)\n", _lightUpdates.size(), _MaxSize);
-			//	_MaxSize = _lightUpdates.size();
-			//}
-        }
-		_maxRecurse--;
-        return false;
-    //} finally {
-        //maxRecurse--;
-    //}
+    int max = 500;
+    int processed = 0;
+    while ((int)_lightUpdates.size() > 0) {
+        if (--max <= 0 || processed++ > 2000)
+		{
+			_maxRecurse--;
+			return true;
+		}
+		LightUpdate l = _lightUpdates.back();
+        _lightUpdates.pop_back();
+		l.update(this);
+    }
+	_maxRecurse--;
+    return false;
 }
 
 void Level::setUpdateLights(bool doUpdate) {
@@ -1816,6 +1810,13 @@ static int maxLoop = 0;
 
 void Level::updateLight(const LightLayer& layer, int x0, int y0, int z0, int x1, int y1, int z1, bool join) {
     if ((dimension->hasCeiling && &layer == &LightLayer::Sky) || !_updateLights) return;
+
+    int dx = x1 - x0;
+    int dy = y1 - y0;
+    int dz = z1 - z0;
+    if (dx > 32 || dy > 128 || dz > 32) {
+        return;
+    }
 
     maxLoop++;
 	//if (x0 < -5 || z0 < -5) LOGI("x, z: %d, %d\n", x0, z0);
@@ -1849,7 +1850,7 @@ void Level::updateLight(const LightLayer& layer, int x0, int y0, int z0, int x1,
     _lightUpdates.push_back(LightUpdate(layer, x0, y0, z0, x1, y1, z1));
     int max = 1000000;
     if ((int)_lightUpdates.size() > max) {
-        LOGI("More than %d updates, aborting lighting updates\n", max);
+        LOGI("More than %d updates, aborting lighting updates (current: %d)\n", max, (int)_lightUpdates.size());
         _lightUpdates.clear();
     }
     maxLoop--;

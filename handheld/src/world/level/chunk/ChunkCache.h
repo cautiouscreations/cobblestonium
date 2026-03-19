@@ -100,13 +100,13 @@ public:
 						int height = level->getHeightmap(cx + x * 16, cz + z * 16);
 						for (int cy = height; cy >= 0; cy--)
 						{
-							level->updateLight(LightLayer::Sky, cx + x * 16, cy, cz + z * 16, cx + x * 16, cy, cz + z * 16);
-							level->updateLight(LightLayer::Block, cx + x * 16 - 1, cy, cz + z * 16 - 1, cx + x * 16 + 1, cy, cz + z * 16 + 1);
+							int worldX = cx + x * 16;
+							int worldZ = cz + z * 16;
+							level->updateLight(LightLayer::Sky, worldX, cy, worldZ, worldX, cy, worldZ);
+							level->updateLight(LightLayer::Block, worldX, cy, worldZ, worldX, cy, worldZ);
 						}
 					}
 				}
-				//level->updateLight(LightLayer::Sky, x * 16, 0, z * 16, x * 16 + 15, 128, z * 16 + 15);
-				//level->updateLight(LightLayer::Block, x * 16, 0, z * 16, x * 16 + 15, 128, z * 16 + 15);
 			}
 
             if (chunks[slot] != NULL) {
