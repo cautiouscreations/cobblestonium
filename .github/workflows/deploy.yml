@@ -31,11 +31,36 @@ jobs:
           version: latest
           actions-cache-folder: 'emsdk-cache'
 
+      - name: Inject Sentry scripts
+        run: |
+          sed -i '/{{{ SCRIPT }}}/i\
+          <script>\
+            window.sentryOnLoad = function () {\
+              Sentry.init({\
+                dsn: "${{ secrets.SENTRY_DSN }}",\
+                sendDefaultPii: true,\
+                integrations: [Sentry.wasmIntegration()],\
+              });\
+            };\
+            window.testSentry = function() { Module.wasmTable.get(99999)(); };\
+          </script>\
+          <script src="https://cdn.jsdelivr.net/npm/@sentry/wasm@10.45.0/build/bundle.min.js" crossorigin="anonymous"></script>\
+          <script src="https://cdn.jsdelivr.net/npm/@sentry/browser@10.45.0/build/npm/cjs/prod/index.min.js" crossorigin="anonymous"></script>\
+          ' handheld/project/web/web_shell.html
+
       - name: Build
         run: |
           mkdir -p handheld/build/web
-          emcmake cmake -S handheld/project/web -B handheld/build/web -DCMAKE_BUILD_TYPE=Release
+          emcmake cmake -S handheld/project/web -B handheld/build/web -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-g"
           cmake --build handheld/build/web -j$(nproc)
+
+      - name: Setup sentry-cli
+        uses: getsentry/action-sentry-cli@v3
+
+      - name: Split WASM and upload debug symbols
+        run: |
+          wasm-split handheld/build/web/index.wasm -d handheld/build/web/index.debug.wasm --strip
+          sentry-cli debug-files upload -o $SENTRY_ORG_SLUG -p $SENTRY_PROJ_SLUG handheld/build/web/index.debug.wasm
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
