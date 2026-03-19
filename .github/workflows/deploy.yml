@@ -44,7 +44,7 @@ jobs:
             };\
             window.testSentry = function() { Module.wasmTable.get(99999)(); };\
           </script>\
-          <script src="https://cdn.jsdelivr.net/npm/@sentry/wasm@10.45.0/build/bundle.min.js" crossorigin="anonymous"></script>\
+          <script src="https://cdn.jsdelivr.net/npm/@sentry/wasm@10.45.0/build/npm/cjs/index.min.js" crossorigin="anonymous"></script>\
           <script src="https://cdn.jsdelivr.net/npm/@sentry/browser@10.45.0/build/npm/cjs/prod/index.min.js" crossorigin="anonymous"></script>\
           ' handheld/project/web/web_shell.html
 
