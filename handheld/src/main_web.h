@@ -531,6 +531,12 @@ int main(int argc, char** argv) {
 
         if (!s->running || ((App*)s->app)->wantToQuit()) {
             webfs_flush();
+            delete s->app;
+            s->app = nullptr;
+            g_appInstance = nullptr;
+            SDL_GL_DeleteContext(g_glContext);
+            SDL_DestroyWindow(g_window);
+            SDL_Quit();
             emscripten_cancel_main_loop();
             return;
         }
@@ -568,10 +574,6 @@ int main(int argc, char** argv) {
 
     emscripten_set_main_loop_arg(mainLoop, state, 0, 1);
 
-    delete app;
-    SDL_GL_DeleteContext(g_glContext);
-    SDL_DestroyWindow(g_window);
-    SDL_Quit();
     return 0;
 }
 
