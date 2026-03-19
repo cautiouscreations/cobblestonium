@@ -389,9 +389,9 @@ int main(int argc, char** argv) {
     app->externalCacheStoragePath = storagePath;
 
     AppContext context;
-    AppPlatform_linux platform;
+    AppPlatform_linux* platform = new AppPlatform_linux();
     context.doRender = false;
-    context.platform = &platform;
+    context.platform = platform;
 
     emscripten_request_fullscreen("#canvas", EM_FALSE);
 
