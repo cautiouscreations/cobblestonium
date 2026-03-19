@@ -58,7 +58,7 @@ jobs:
         uses: matbour/setup-sentry-cli@v2
 
       - name: Download wasm-split
-        -uses: robinraju/release-downloader@v1
+        uses: robinraju/release-downloader@v1
         with:
           repository: 'getsentry/symbolicator'
           latest: true
