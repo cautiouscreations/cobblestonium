@@ -11,7 +11,7 @@ CreateWorldScreen::CreateWorldScreen()
     bStart(NULL),
     bGameMode(NULL),
     bBack(NULL),
-    isCreative(true)
+    isCreative(false)
 {
 }
 
@@ -29,7 +29,7 @@ void CreateWorldScreen::init()
     nameBox = new TextBox(0, "New World");
     seedBox = new TextBox(1, "");
     bStart = new Button(2, "Start");
-    bGameMode = new Button(3, "Game Mode: Creative");
+    bGameMode = new Button(3, "Game Mode: Survival");
     bBack = new Button(4, "Back");
 
     textBoxes.push_back(nameBox);
