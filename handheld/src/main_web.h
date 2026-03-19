@@ -16,10 +16,14 @@
 #include "platform/input/Keyboard.h"
 #include "platform/input/Mouse.h"
 #include "platform/input/Multitouch.h"
+#include "client/gui/components/TextBox.h"
+#include "client/gui/Screen.h"
 
 #ifndef MAIN_CLASS
 #define MAIN_CLASS NinecraftApp
 #endif
+
+static MAIN_CLASS* g_appInstance = NULL;
 
 void AppPlatform_linux_setScreenSize(int width, int height);
 
@@ -136,6 +140,92 @@ EM_JS(void, webfs_flush, (), {
     });
 });
 
+EM_JS(int, js_check_textbox_tap, (int x, int y), {
+    return Module._check_textbox_tap(x, y);
+});
+
+EM_JS(void, web_show_keyboard, (), {
+    if (typeof document === 'undefined') return;
+
+    var input = document.getElementById('mc-keyboard-input');
+    if (!input) {
+        input = document.createElement('input');
+        input.id = 'mc-keyboard-input';
+        input.type = 'text';
+        input.autocapitalize = 'none';
+        input.autocomplete = 'off';
+        input.autocorrect = 'off';
+        input.spellcheck = false;
+        input.style.position = 'fixed';
+        input.style.left = '-100px';
+        input.style.top = '-100px';
+        input.style.width = '1px';
+        input.style.height = '1px';
+        input.style.opacity = '0';
+        input.style.zIndex = '-1';
+        document.body.appendChild(input);
+
+        input.addEventListener('input', function(e) {
+            var val = e.target.value;
+            if (val.length > 0) {
+                for (var i = 0; i < val.length; i++) {
+                    _keyboardNewChar(val.charCodeAt(i));
+                }
+                e.target.value = "";
+            }
+        });
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace') {
+                _keyboardNewKey(8, 1);
+                _keyboardNewKey(8, 0);
+            } else if (e.key === 'Enter') {
+                _keyboardNewKey(13, 1);
+                _keyboardNewKey(13, 0);
+            }
+        });
+    }
+
+    input.focus();
+    input.click(); // Some browsers need a click
+});
+
+EM_JS(void, web_hide_keyboard, (), {
+    if (typeof document === 'undefined') return;
+    var input = document.getElementById('mc-keyboard-input');
+    if (input) {
+        input.blur();
+    }
+});
+
+extern "C" {
+    EMSCRIPTEN_KEEPALIVE
+    int check_textbox_tap(int x, int y) {
+        if (g_appInstance && g_appInstance->screen) {
+            int gx = x;
+            int gy = y;
+            g_appInstance->screen->toGUICoordinate(gx, gy);
+            for (unsigned int i = 0; i < g_appInstance->screen->textBoxes.size(); i++) {
+                TextBox* tb = g_appInstance->screen->textBoxes[i];
+                if (gx >= tb->x && gx < tb->x + tb->w && gy >= tb->y && gy < tb->y + tb->h) {
+                    return 1;
+                }
+            }
+        }
+        return 0;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void keyboardNewChar(int c) {
+        Keyboard::feedText(c);
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void keyboardNewKey(int key, int state) {
+        Keyboard::feed(key, state);
+    }
+}
+
 static unsigned char transformKey(int key) {
     if (key == SDLK_LSHIFT || key == SDLK_RSHIFT) return Keyboard::KEY_LSHIFT;
     if (key == SDLK_DOWN) return 40;
@@ -232,6 +322,11 @@ EM_BOOL web_touch_start(int eventType, const EmscriptenTouchEvent* e, void* user
             char pointerId = getInternalPointerId(t->identifier, true);
             if (g_primaryPointerId == -1) {
                 g_primaryPointerId = pointerId;
+                if (js_check_textbox_tap(x, y)) {
+                    web_show_keyboard();
+                } else {
+                    web_hide_keyboard();
+                }
             }
             queueTouchEvent(1, x, y, pointerId);
         }
@@ -384,6 +479,7 @@ int main(int argc, char** argv) {
     glInit();
 
     MAIN_CLASS* app = new MAIN_CLASS();
+    g_appInstance = app;
     std::string storagePath = "/persistent";
     app->externalStoragePath = storagePath;
     app->externalCacheStoragePath = storagePath;

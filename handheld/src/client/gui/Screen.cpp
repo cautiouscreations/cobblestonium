@@ -25,6 +25,11 @@ void Screen::render( int xm, int ym, float a )
 		Button* button = buttons[i];
 		button->render(minecraft, xm, ym);
 	}
+
+	for (unsigned int i = 0; i < textBoxes.size(); i++) {
+		TextBox* textBox = textBoxes[i];
+		textBox->render(minecraft, xm, ym);
+	}
 }
 
 void Screen::init( Minecraft* minecraft, int width, int height )
@@ -100,6 +105,13 @@ void Screen::keyboardTextEvent()
 {
 	keyboardNewChar(Keyboard::getChar());
 }
+
+void Screen::keyboardNewChar(char inputChar) {
+	for (unsigned int i = 0; i < textBoxes.size(); i++) {
+		textBoxes[i]->keyboardNewChar(minecraft, inputChar);
+	}
+}
+
 void Screen::renderBackground()
 {
 	renderBackground(0);
@@ -153,6 +165,10 @@ bool Screen::closeOnPlayerHurt() {
 
 void Screen::keyPressed( int eventKey )
 {
+	for (unsigned int i = 0; i < textBoxes.size(); i++) {
+		textBoxes[i]->keyPressed(minecraft, eventKey);
+	}
+
 	if (eventKey == Keyboard::KEY_ESCAPE) {
 		minecraft->setScreen(NULL);
 		//minecraft->grabMouse();
@@ -193,6 +209,15 @@ void Screen::updateTabButtonSelection()
 void Screen::mouseClicked( int x, int y, int buttonNum )
 {
 	if (buttonNum == MouseAction::ACTION_LEFT) {
+		for (unsigned int i = 0; i < textBoxes.size(); i++) {
+			TextBox* textBox = textBoxes[i];
+			if (x >= textBox->x && x < textBox->x + textBox->w && y >= textBox->y && y < textBox->y + textBox->h) {
+				textBox->setFocus(minecraft);
+			} else {
+				textBox->loseFocus(minecraft);
+			}
+		}
+
 		for (unsigned int i = 0; i < buttons.size(); ++i) {
 			Button* button = buttons[i];
             //LOGI("Hit-testing button: %p\n", button);

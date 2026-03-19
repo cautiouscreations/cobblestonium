@@ -58,16 +58,16 @@ protected:
 	virtual void mouseReleased(int x, int y, int buttonNum);
 
 	virtual void keyPressed(int eventKey);
-	virtual void keyboardNewChar(char inputChar) {}
+	virtual void keyboardNewChar(char inputChar);
 public:
 	int width;
 	int height;
 	bool passEvents;
 	//GuiParticles* particles;
-protected:
-	Minecraft* minecraft;
 	std::vector<Button*> buttons;
 	std::vector<TextBox*> textBoxes;
+protected:
+	Minecraft* minecraft;
 
 	std::vector<Button*> tabButtons;
 	int tabButtonIndex;

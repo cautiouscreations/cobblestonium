@@ -5,6 +5,7 @@
 #include "../TweenData.h"
 #include "../components/Button.h"
 #include "../components/SmallButton.h"
+#include "../components/TextBox.h"
 #include "../components/RolledSelectionListH.h"
 #include "../../Minecraft.h"
 #include "../../../world/level/storage/LevelStorageSource.h"
@@ -93,14 +94,17 @@ public:
 	bool isInGameScreen();
 private:
 	void loadLevelSource();
+    void updateFilter();
 	std::string getUniqueLevelName(const std::string& level);
 
 	Button bDelete;
 	Button bCreate;
 	Button bBack;
 	Button bWorldView;
+    TextBox* searchBox;
 	WorldSelectionList* worldsList;
 	LevelSummaryList levels;
+    LevelSummaryList allLevels;
 
 	bool _mouseHasBeenUp;
 	bool _hasStartedLevel;

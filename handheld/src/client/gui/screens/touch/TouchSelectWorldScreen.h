@@ -6,6 +6,7 @@
 #include "../../TweenData.h"
 #include "../../components/ImageButton.h"
 #include "../../components/Button.h"
+#include "../../components/TextBox.h"
 #include "../../components/RolledSelectionListH.h"
 #include "../../../Minecraft.h"
 #include "../../../../world/level/storage/LevelStorageSource.h"
@@ -100,6 +101,7 @@ public:
 	bool isInGameScreen();
 private:
 	void loadLevelSource();
+    void updateFilter();
 	std::string getUniqueLevelName(const std::string& level);
 
 	ImageButton bDelete;
@@ -107,15 +109,16 @@ private:
 	THeader bHeader;
 	TButton bBack;
 	Button bWorldView;
+    TextBox* searchBox;
 	TouchWorldSelectionList* worldsList;
 	LevelSummaryList levels;
+    LevelSummaryList allLevels;
 
 	bool _mouseHasBeenUp;
 	bool _hasStartedLevel;
 	int _state;
 	static const int _STATE_DEFAULT = 0;
 	static const int _STATE_CREATEWORLD = 1;
-	//LevelStorageSource* levels;
 };
 };
 

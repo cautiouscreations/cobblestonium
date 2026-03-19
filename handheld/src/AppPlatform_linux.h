@@ -91,6 +91,8 @@ public:
     float getPixelsPerMillimeter();
     bool supportsTouchscreen();
     bool hasBuyButtonWhenInvalidLicense();
+    void showKeyboard();
+    void hideKeyboard();
 };
 
 #endif

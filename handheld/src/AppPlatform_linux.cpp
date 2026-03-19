@@ -5,6 +5,28 @@
 static int g_screenWidth = 854;
 static int g_screenHeight = 480;
 
+#ifdef WEB
+#include <emscripten.h>
+extern "C" {
+    void web_show_keyboard();
+    void web_hide_keyboard();
+}
+#endif
+
+void AppPlatform_linux::showKeyboard() {
+#ifdef WEB
+    web_show_keyboard();
+#endif
+    keyboardVisible = true;
+}
+
+void AppPlatform_linux::hideKeyboard() {
+#ifdef WEB
+    web_hide_keyboard();
+#endif
+    keyboardVisible = false;
+}
+
 void AppPlatform_linux_setScreenSize(int width, int height) {
     g_screenWidth = width;
     g_screenHeight = height;
