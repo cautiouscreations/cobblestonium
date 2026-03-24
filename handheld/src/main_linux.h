@@ -87,9 +87,10 @@ static unsigned char transformKey(int key) {
     if (key == SDLK_DOWN) return 40;
     if (key == SDLK_UP) return 38;
     if (key == SDLK_SPACE) return Keyboard::KEY_SPACE;
-    if (key == SDLK_RETURN || key == SDLK_KP_ENTER) return 13;
+    if (key == SDLK_RETURN || key == SDLK_KP_ENTER) return Keyboard::KEY_RETURN;
     if (key == SDLK_ESCAPE) return Keyboard::KEY_ESCAPE;
     if (key == SDLK_TAB) return 250;
+    if (key == SDLK_BACKSPACE) return Keyboard::KEY_BACKSPACE;
     if (key >= SDLK_a && key <= SDLK_z) return (unsigned char)('A' + (key - SDLK_a));
     if (key >= SDLK_0 && key <= SDLK_9) return (unsigned char)('0' + (key - SDLK_0));
     return 0;
@@ -115,14 +116,17 @@ static int handleEvents() {
         if (event.type == SDL_KEYDOWN) {
             unsigned char transformed = transformKey(event.key.keysym.sym);
             if (transformed) Keyboard::feed(transformed, 1);
-            if (event.key.keysym.sym >= 32 && event.key.keysym.sym <= 126) {
-                Keyboard::feedText(event.key.keysym.sym);
-            }
         }
 
         if (event.type == SDL_KEYUP) {
             unsigned char transformed = transformKey(event.key.keysym.sym);
             if (transformed) Keyboard::feed(transformed, 0);
+        }
+
+        if (event.type == SDL_TEXTINPUT) {
+            for (int i = 0; event.text.text[i] != '\0'; i++) {
+                Keyboard::feedText(event.text.text[i]);
+            }
         }
 
         if (event.type == SDL_MOUSEWHEEL) {
