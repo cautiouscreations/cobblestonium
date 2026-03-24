@@ -40,7 +40,7 @@ LevelChunk::LevelChunk( Level* level, unsigned char* blocks, int x, int z )
 
 LevelChunk::~LevelChunk()
 {
-	//delete blocks;
+	delete[] blocks;
 }
 
 void LevelChunk::init()

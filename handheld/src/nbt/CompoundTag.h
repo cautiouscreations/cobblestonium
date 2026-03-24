@@ -20,10 +20,12 @@
 #include "StringTag.h"
 #include "ByteArrayTag.h"
 
+#include <memory>
+
 class CompoundTag: public Tag
 {
 	typedef Tag super;
-	typedef std::map<std::string, Tag*> TagMap;
+	typedef std::map<std::string, std::unique_ptr<Tag>> TagMap;
 public:
     CompoundTag()
 	:	super("")
@@ -35,9 +37,13 @@ public:
 	{
     }
 
+    ~CompoundTag() {
+        deleteChildren();
+    }
+
     void write(IDataOutput* dos) /*throws IOException*/ {
 		for (TagMap::iterator it = tags.begin(); it != tags.end(); ++it) {
-            Tag::writeNamedTag(it->second, dos);
+            Tag::writeNamedTag(it->second.get(), dos);
         }
         dos->writeByte(Tag::TAG_End);
     }
@@ -47,7 +53,7 @@ public:
         Tag* tag = NULL;
 
         while ((tag = Tag::readNamedTag(dis)) && tag->getId() != Tag::TAG_End) {
-			tags.insert(std::make_pair(tag->getName(), tag));
+			tags.insert(std::make_pair(tag->getName(), std::unique_ptr<Tag>(tag)));
         }
 		// <tag> is now of type TAG_End (that's new'ed). Delete it.
 		delete tag;
@@ -56,7 +62,7 @@ public:
     void getAllTags(std::vector<Tag*>& tags_) const {
 		//std::transform(tags.begin(), tags.end(), std::back_inserter(tags_), PairValueFunctor());
 		for (TagMap::const_iterator it = tags.begin(); it != tags.end(); ++it) {
-			tags_.push_back(it->second);
+			tags_.push_back(it->second.get());
 		}
     }
 
@@ -65,43 +71,43 @@ public:
     }
 
     void put(const std::string& name, Tag* tag) {
-        tags.insert(std::make_pair(name, tag->setName(name)));
+        tags.insert(std::make_pair(name, std::unique_ptr<Tag>(tag->setName(name))));
     }
 
     void putByte(const std::string& name, char value) {
-        tags.insert(std::make_pair(name, new ByteTag(name, value)));
+        tags.insert(std::make_pair(name, std::unique_ptr<Tag>(new ByteTag(name, value))));
     }
 
     void putShort(const std::string& name, short value) {
-        tags.insert(std::make_pair(name, new ShortTag(name, value)));
+        tags.insert(std::make_pair(name, std::unique_ptr<Tag>(new ShortTag(name, value))));
     }
 
     void putInt(const std::string& name, int value) {
-        tags.insert(std::make_pair(name, new IntTag(name, value)));
+        tags.insert(std::make_pair(name, std::unique_ptr<Tag>(new IntTag(name, value))));
     }
 
     void putLong(const std::string& name, long value) {
-        tags.insert(std::make_pair(name, new LongTag(name, value)));
+        tags.insert(std::make_pair(name, std::unique_ptr<Tag>(new LongTag(name, value))));
     }
 
     void putFloat(const std::string& name, float value) {
-        tags.insert(std::make_pair(name, new FloatTag(name, value)));
+        tags.insert(std::make_pair(name, std::unique_ptr<Tag>(new FloatTag(name, value))));
     }
 
     void putDouble(const std::string& name, float value) {
-        tags.insert(std::make_pair(name, new DoubleTag(name, value)));
+        tags.insert(std::make_pair(name, std::unique_ptr<Tag>(new DoubleTag(name, value))));
     }
 
     void putString(const std::string& name, const std::string& value) {
-        tags.insert(std::make_pair(name, new StringTag(name, value)));
+        tags.insert(std::make_pair(name, std::unique_ptr<Tag>(new StringTag(name, value))));
     }
 
     void putByteArray(const std::string& name, TagMemoryChunk mem) {
-        tags.insert(std::make_pair(name, new ByteArrayTag(name, mem)));
+        tags.insert(std::make_pair(name, std::unique_ptr<Tag>(new ByteArrayTag(name, mem))));
     }
 
     void putCompound(const std::string& name, CompoundTag* value) {
-        tags.insert(std::make_pair(name, value->setName(name)));
+        tags.insert(std::make_pair(name, std::unique_ptr<Tag>(value->setName(name))));
     }
 
     void putBoolean(const std::string& string, bool val) {
@@ -112,7 +118,7 @@ public:
 		TagMap::const_iterator it = tags.find(name);
 		if (it == tags.end())
 			return NULL;
-		return it->second;
+		return it->second.get();
     }
 
     __inline bool contains(const std::string& name) const {
@@ -188,9 +194,9 @@ public:
 		std::string prefix = prefix_;
 		out.print(prefix); out.println("{");
         prefix += "   ";
-		for (TagMap::const_iterator it = tags.begin(); it != tags.end(); ++it) {
-			(it->second)->print(prefix, out);
-		}
+	for (TagMap::const_iterator it = tags.begin(); it != tags.end(); ++it) {
+		(it->second.get())->print(prefix, out);
+	}
         out.print(prefix_);
 		out.println("}");
     }
@@ -227,13 +233,7 @@ public:
     }
 
 	void deleteChildren() {
-		TagMap::iterator it = tags.begin();
-		for (; it != tags.end(); ++it) {
-			if (!it->second)
-				continue;
-			it->second->deleteChildren();
-			delete it->second;
-		}
+		tags.clear();
 	}
 private:
      TagMap tags;

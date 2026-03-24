@@ -24,6 +24,10 @@ public:
 	{
     }
 
+    ~ListTag() {
+        deleteChildren();
+    }
+
     void write(IDataOutput* dos) /*throws IOException*/ {
         if (list.size() > 0) type = list.front()->getId();
         else type = TAG_Byte;
@@ -130,10 +134,10 @@ public:
 	void deleteChildren() {
 		for (List::iterator it = list.begin(); it != list.end(); ++it) {
 			if (*it) {
-				(*it)->deleteChildren();
 				delete (*it);
 			}
 		}
+		list.clear();
 	}
 
 private:

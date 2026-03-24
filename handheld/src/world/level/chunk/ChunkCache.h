@@ -14,12 +14,13 @@ class ChunkCache: public ChunkSource {
     static const int MAX_SAVES = 2;
 public:
     ChunkCache(Level* level_, ChunkStorage* storage_, ChunkSource* source_)
-	:	xLast(-999999999),
-		zLast(-999999999),
-		last(NULL),
-		level(level_),
-		storage(storage_),
-		source(source_)
+	:		xLast(-999999999),
+			zLast(-999999999),
+			last(NULL),
+			level(level_),
+			storage(storage_),
+			source(source_),
+			savingEntities(false)
 	{
 		isChunkCache = true;
         //emptyChunk = new EmptyLevelChunk(level_, emptyChunkBlocks, 0, 0);
@@ -46,9 +47,6 @@ public:
     }
 
     bool hasChunk(int x, int z) {
-        if (x == xLast && z == zLast && last != NULL) {
-            return true;
-        }
         int xs = x & (CHUNK_CACHE_WIDTH - 1);
         int zs = z & (CHUNK_CACHE_WIDTH - 1);
         int slot = xs + zs * CHUNK_CACHE_WIDTH;
@@ -63,17 +61,20 @@ public:
 		//static Stopwatch sw;
 		//sw.start();
 
-		if (x == xLast && z == zLast && last != NULL) {
-            return last;
-        }
-        int xs = x & (CHUNK_CACHE_WIDTH - 1);
+		int xs = x & (CHUNK_CACHE_WIDTH - 1);
         int zs = z & (CHUNK_CACHE_WIDTH - 1);
         int slot = xs + zs * CHUNK_CACHE_WIDTH;
+        // Only use last cache if it matches the chunk in the slot
+        if (x == xLast && z == zLast && last != NULL && last == chunks[slot]) {
+            return last;
+        }
         if (!hasChunk(x, z)) {
             if (chunks[slot] != NULL) {
                 chunks[slot]->unload();
                 save(chunks[slot]);
+                savingEntities = true;
                 saveEntities(chunks[slot]);
+                savingEntities = false;
             }
 
             LevelChunk* newChunk = load(x, z);
@@ -226,7 +227,7 @@ private:
     }
 
     void saveEntities(LevelChunk* levelChunk) {
-        if (storage == NULL) return;
+        if (storage == NULL || savingEntities) return;
         //try {
             storage->saveEntities(level, levelChunk);
         //} catch (Error e) {
@@ -256,6 +257,8 @@ private:
     Level* level;
 
     LevelChunk* last;
+    
+    bool savingEntities;
 
 };
 
