@@ -172,21 +172,19 @@ void TouchscreenInput_TestFps::onConfigChanged(const Config& c) {
 
 void TouchscreenInput_TestFps::setKey( int key, bool state )
 {
-	#ifdef WIN32
-        //LOGI("key: %d, %d\n", key, state);
+	//LOGI("key: %d, %d\n", key, state);
 
-		int id = -1;
-		if (key == _options->keyUp.key) id = KEY_UP;
-		if (key == _options->keyDown.key) id = KEY_DOWN;
-		if (key == _options->keyLeft.key) id = KEY_LEFT;
-		if (key == _options->keyRight.key) id = KEY_RIGHT;
-		if (key == _options->keyJump.key) id = KEY_JUMP;
-		if (key == _options->keySneak.key) id = KEY_SNEAK;
-		if (key == _options->keyCraft.key) id = KEY_CRAFT;
-		if (id >= 0) {
-			_keys[id] = state;
-		}
-	#endif
+	int id = -1;
+	if (key == _options->keyUp.key) id = KEY_UP;
+	if (key == _options->keyDown.key) id = KEY_DOWN;
+	if (key == _options->keyLeft.key) id = KEY_LEFT;
+	if (key == _options->keyRight.key) id = KEY_RIGHT;
+	if (key == _options->keyJump.key) id = KEY_JUMP;
+	if (key == _options->keySneak.key) id = KEY_SNEAK;
+	if (key == _options->keyCraft.key) id = KEY_CRAFT;
+	if (id >= 0) {
+		_keys[id] = state;
+	}
 }
 
 void TouchscreenInput_TestFps::releaseAllKeys()
@@ -196,10 +194,8 @@ void TouchscreenInput_TestFps::releaseAllKeys()
 
 	for (int i = 0; i<8; ++i)
 		_buttons[i] = false;
-#ifdef WIN32
 	for (int i = 0; i<NumKeys; ++i)
 		_keys[i] = false;
-#endif
 	_pressedJump = false;
 	_allowHeightChange = false;
 }
@@ -331,7 +327,6 @@ void TouchscreenInput_TestFps::tick( Player* player )
 	}
 	_renderFlightImage = player->abilities.flying;
 
-#ifdef WIN32
 	if (_keys[KEY_UP]) ya++;
 	if (_keys[KEY_DOWN]) ya--;
 	if (_keys[KEY_LEFT]) xa++;
@@ -340,7 +335,6 @@ void TouchscreenInput_TestFps::tick( Player* player )
 	//sneaking = _keys[KEY_SNEAK];
 	if (_keys[KEY_CRAFT])
 		player->startCrafting((int)player->x, (int)player->y, (int)player->z, Recipe::SIZE_2X2);
-#endif
 
 	if (sneaking) {
 		xa *= 0.3f;
