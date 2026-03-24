@@ -31,6 +31,11 @@ jobs:
           version: latest
           actions-cache-folder: 'emsdk-cache'
 
+      - name: Substitute commit hash for staging
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          sed -i "s/staging/$SHORT_SHA/g" handheld/src/SharedConstants.cpp
+
       - name: Inject Sentry scripts
         run: |
           sed -i '/{{{ SCRIPT }}}/i\
