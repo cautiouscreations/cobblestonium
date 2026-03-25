@@ -83,14 +83,23 @@ Biome** BiomeSource::getBiomeBlock( int x, int z, int w, int h )
 
 Biome** BiomeSource::getBiomeBlock( Biome** biomes__, int x, int z, int w, int h )
 {
-	//for (int i = 0; i < w*h; ++i) biomes__[i] = Biome::tundra;
-	//const int size = w * h;
-	//if (lenBiomes < size) {
-	//	//printf("changing to size: %d (was %d). %d, %d (%d, %d)\n", size, lenBiomes, x, z, w, h);
-	//	if (biomes) delete[] biomes;
-	//	biomes = new Biome*[size];
-	//	lenBiomes = size;
-	//}
+	// Ensure buffers are large enough for the requested region
+	const int size = w * w;
+	if (lenTemperatures < size) {
+		delete[] temperatures;
+		temperatures = new float[size];
+		lenTemperatures = size;
+	}
+	if (lenDownfalls < size) {
+		delete[] downfalls;
+		downfalls = new float[size];
+		lenDownfalls = size;
+	}
+	if (lenNoises < size) {
+		delete[] noises;
+		noises = new float[size];
+		lenNoises = size;
+	}
 
 	temperatures = temperatureMap->getRegion(temperatures, x, z, w, w, tempScale, tempScale, 0.25f);
 	downfalls = downfallMap->getRegion(downfalls, x, z, w, w, downfallScale, downfallScale, 0.3333f);
@@ -125,13 +134,18 @@ Biome** BiomeSource::getBiomeBlock( Biome** biomes__, int x, int z, int w, int h
 
 float* BiomeSource::getTemperatureBlock( /*float* temperatures__, */int x, int z, int w, int h )
 {
-	//LOGI("gTempBlock: 1\n");
-	//const int size = w * h;
-	//if (lenTemperatures < size) {
-	//	if (temperatures) delete[] temperatures;
-	//	temperatures = new float[size];
-	//	lenTemperatures = size;
-	//}
+	// Ensure buffers are large enough for the requested region
+	const int size = w * h;
+	if (lenTemperatures < size) {
+		delete[] temperatures;
+		temperatures = new float[size];
+		lenTemperatures = size;
+	}
+	if (lenNoises < size) {
+		delete[] noises;
+		noises = new float[size];
+		lenNoises = size;
+	}
 
 	float * ot = temperatures;
 	temperatures = temperatureMap->getRegion(temperatures, x, z, w, h, tempScale, tempScale, 0.25f);
