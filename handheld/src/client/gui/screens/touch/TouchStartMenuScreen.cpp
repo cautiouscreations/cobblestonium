@@ -40,7 +40,7 @@ BuyButton::BuyButton(int id)
 
 void BuyButton::render(Minecraft* minecraft, int xm, int ym) {
 	glColor4f2(1, 1, 1, 1);
-	bool hovered = active && (minecraft->useTouchscreen()? (xm >= x && ym >= y && xm < x + width && ym < y + height) : false);
+	bool hovered = active && (minecraft->useTouchscreen()? (xm >= x && ym >= y && xm < x + width && ym < y + height) : (xm >= x && ym >= y && xm < x + width && ym < y + height));
 	renderBg(minecraft, xm, ym);
 	TextureId texId = (_imageDef.name.length() > 0)? minecraft->textures->loadAndBindTexture(_imageDef.name) : Textures::InvalidId;
 	if ( Textures::isTextureIdValid(texId) ) {

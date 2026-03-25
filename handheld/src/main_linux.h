@@ -86,11 +86,25 @@ static unsigned char transformKey(int key) {
     if (key == SDLK_LSHIFT || key == SDLK_RSHIFT) return Keyboard::KEY_LSHIFT;
     if (key == SDLK_DOWN) return 40;
     if (key == SDLK_UP) return 38;
+    if (key == SDLK_LEFT) return 37;
+    if (key == SDLK_RIGHT) return 39;
     if (key == SDLK_SPACE) return Keyboard::KEY_SPACE;
     if (key == SDLK_RETURN || key == SDLK_KP_ENTER) return Keyboard::KEY_RETURN;
     if (key == SDLK_ESCAPE) return Keyboard::KEY_ESCAPE;
     if (key == SDLK_TAB) return 250;
     if (key == SDLK_BACKSPACE) return Keyboard::KEY_BACKSPACE;
+    if (key == SDLK_F1) return Keyboard::KEY_F1;
+    if (key == SDLK_F2) return Keyboard::KEY_F2;
+    if (key == SDLK_F3) return Keyboard::KEY_F3;
+    if (key == SDLK_F4) return Keyboard::KEY_F4;
+    if (key == SDLK_F5) return Keyboard::KEY_F5;
+    if (key == SDLK_F6) return Keyboard::KEY_F6;
+    if (key == SDLK_F7) return Keyboard::KEY_F7;
+    if (key == SDLK_F8) return Keyboard::KEY_F8;
+    if (key == SDLK_F9) return Keyboard::KEY_F9;
+    if (key == SDLK_F10) return Keyboard::KEY_F10;
+    if (key == SDLK_F11) return Keyboard::KEY_F11;
+    if (key == SDLK_F12) return Keyboard::KEY_F12;
     if (key >= SDLK_a && key <= SDLK_z) return (unsigned char)('A' + (key - SDLK_a));
     if (key >= SDLK_0 && key <= SDLK_9) return (unsigned char)('0' + (key - SDLK_0));
     return 0;
@@ -157,7 +171,7 @@ static int handleEvents() {
         if (event.type == SDL_MOUSEMOTION) {
             float x = (float)event.motion.x;
             float y = (float)event.motion.y;
-            Multitouch::feed(0, 0, x, y, 0);
+            Multitouch::feed(0, 0, x, y, (short)event.motion.xrel, (short)event.motion.yrel, 0);
             Mouse::feed(0, 0, x, y, event.motion.xrel, event.motion.yrel);
         }
     }

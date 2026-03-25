@@ -653,7 +653,7 @@ void Minecraft::tickInput() {
 
 		const MouseAction& e = Mouse::getEvent();
 
-#ifdef RPI // If clicked when not having focus, get focus @keyboard
+#if defined(RPI) || (defined(LINUX) && !defined(WEB)) // If clicked when not having focus, get focus @keyboard
 		if (!mouseGrabbed) {
 			if (!screen && e.data == MouseAction::DATA_DOWN) {
 				grabMouse();
@@ -719,13 +719,20 @@ void Minecraft::tickInput() {
 				}
 			#endif
 			#if defined(RPI)
-				if (key == Keyboard::KEY_E) {
-					screenChooser.setScreen(SCREEN_BLOCKSELECTION);
-				}
 				if (!screen && key == Keyboard::KEY_O || key == 250) {
 					releaseMouse();
 				}
 			#endif
+			#if defined(LINUX) && !defined(WEB)
+				if (key == Keyboard::KEY_E) {
+					screenChooser.setScreen(SCREEN_BLOCKSELECTION);
+				}
+			#endif
+
+			if (key == Keyboard::KEY_F5) {
+				options.thirdPersonView = !options.thirdPersonView;
+			}
+
 			#if defined(WIN32)
 				if (key == Keyboard::KEY_F) {
 					options.isFlying = !options.isFlying;
@@ -834,6 +841,10 @@ void Minecraft::tickInput() {
 				}
 			#endif
 
+			#if defined(LINUX) && !defined(WEB)
+				if (key == Keyboard::KEY_ESCAPE)
+					pauseGame(false);
+			#endif
 			#ifndef RPI
 				if (key == 82)
 					pauseGame(false);
@@ -1127,6 +1138,9 @@ void Minecraft::releaseMouse()
 
 bool Minecraft::useTouchscreen() {
 #ifdef RPI
+	return false;
+#endif
+#if defined(LINUX) && !defined(WEB)
 	return false;
 #endif
 	return options.useTouchScreen || !_supportsNonTouchscreen;

@@ -230,6 +230,8 @@ static unsigned char transformKey(int key) {
     if (key == SDLK_LSHIFT || key == SDLK_RSHIFT) return Keyboard::KEY_LSHIFT;
     if (key == SDLK_DOWN) return 40;
     if (key == SDLK_UP) return 38;
+    if (key == SDLK_LEFT) return 37;
+    if (key == SDLK_RIGHT) return 39;
     if (key == SDLK_SPACE) return Keyboard::KEY_SPACE;
     if (key == SDLK_RETURN || key == SDLK_KP_ENTER) return 13;
     if (key == SDLK_ESCAPE) return Keyboard::KEY_ESCAPE;
@@ -373,6 +375,27 @@ EM_BOOL web_touch_cancel(int eventType, const EmscriptenTouchEvent* e, void* use
     return web_touch_end(eventType, e, userData);
 }
 
+static bool g_pointerLockActive = false;
+
+EM_BOOL web_pointerlockchange(int eventType, const EmscriptenPointerlockChangeEvent* e, void* userData) {
+    (void)eventType;
+    (void)userData;
+    g_pointerLockActive = e->isActive;
+    return EM_TRUE;
+}
+
+EM_BOOL web_mousemove(int eventType, const EmscriptenMouseEvent* e, void* userData) {
+    (void)eventType;
+    (void)userData;
+    if (g_pointerLockActive && e->movementX != 0 && e->movementY != 0) {
+        int mx = 0;
+        int my = 0;
+        SDL_GetMouseState(&mx, &my);
+        Mouse::feed(0, 0, mx, my, (short)e->movementX, (short)e->movementY);
+    }
+    return EM_TRUE;
+}
+
 static int handleEvents() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -411,6 +434,9 @@ static int handleEvents() {
             char button = left ? 1 : 2;
             Mouse::feed(button, 1, event.button.x, event.button.y);
             Multitouch::feed(button, 1, event.button.x, event.button.y, 0);
+            if (left && !g_pointerLockActive) {
+                emscripten_request_pointerlock(NULL, EM_TRUE);
+            }
         }
 
         if (event.type == SDL_MOUSEBUTTONUP) {
@@ -495,6 +521,9 @@ int main(int argc, char** argv) {
     emscripten_set_touchend_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_TRUE, web_touch_end);
     emscripten_set_touchmove_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_TRUE, web_touch_move);
     emscripten_set_touchcancel_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_TRUE, web_touch_cancel);
+
+    emscripten_set_pointerlockchange_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_TRUE, web_pointerlockchange);
+    emscripten_set_mousemove_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_TRUE, web_mousemove);
 
     double cssW = 0.0;
     double cssH = 0.0;
