@@ -1782,7 +1782,7 @@ bool Level::updateLights() {
         return false;
     }
     _maxRecurse++;
-    int max = 500;
+    int max = 50;
     int processed = 0;
     while ((int)_lightUpdates.size() > 0) {
         if (--max <= 0 || processed++ > 2000)

@@ -469,7 +469,8 @@ void Minecraft::update() {
 		tick(i, toTick-1);
 
 	TIMER_POP_PUSH("updatelights");
-	if (level && !isGeneratingLevel) {
+	static int lightUpdateFrameCounter = 0;
+	if (level && !isGeneratingLevel && (++lightUpdateFrameCounter % 3 == 0)) {
 		level->updateLights();
 	}
 	TIMER_POP();

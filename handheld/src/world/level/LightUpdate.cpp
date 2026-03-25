@@ -78,6 +78,7 @@ void LightUpdate::update(Level* level)
     int lastzc = 0;
     bool hasLast = false;
     bool lastOk = false;
+    LevelChunk* cachedChunk = nullptr;
 
     for (int x = x0; x <= x1; x++)
         for (int z = z0; z <= z1; z++) {
@@ -90,29 +91,35 @@ void LightUpdate::update(Level* level)
             } else {
                 ok = level->hasChunksAt(x, 0, z, 1);
                 if (ok) {
-                    LevelChunk* lc = level->getChunk(x >> 4, z >> 4);
-                    if (lc->isEmpty()) ok = false;
+                    cachedChunk = level->getChunk(xc, zc);
+                    if (cachedChunk->isEmpty()) ok = false;
                 }
                 lastOk = ok;
                 lastxc = xc;
                 lastzc = zc;
             }
 
-            if (ok) {
+            if (ok && cachedChunk) {
 
                 if (y0 < 0) y0 = 0;
                 if (y1 >= Level::DEPTH) y1 = Level::DEPTH - 1;
 
+                // Cache neighbor chunks for brightness lookups
+                LevelChunk* chunkXNeg = level->getChunk((x - 1) >> 4, z >> 4);
+                LevelChunk* chunkXPos = level->getChunk((x + 1) >> 4, z >> 4);
+                LevelChunk* chunkZNeg = level->getChunk(x >> 4, (z - 1) >> 4);
+                LevelChunk* chunkZPos = level->getChunk(x >> 4, (z + 1) >> 4);
+
                 for (int y = y0; y <= y1; y++) {
-                    int old = level->getBrightness(*layer, x, y, z);
+                    int old = cachedChunk->getBrightness(*layer, x & 15, y, z & 15);
 
                     int target = 0;
-                    int tile = level->getTile(x, y, z);
+                    int tile = cachedChunk->getTile(x & 15, y, z & 15);
                     int block = Tile::lightBlock[tile];
                     if (block == 0) block = 1;
                     int emit = 0;
                     if (layer == &LightLayer::Sky) {
-                        if (level->isSkyLit(x, y, z)) emit = 15;
+                        if (cachedChunk->isSkyLit(x & 15, y, z & 15)) emit = 15;
                     } else if (layer == &LightLayer::Block) {
                         emit = Tile::lightEmission[tile];
                     }
@@ -121,12 +128,12 @@ void LightUpdate::update(Level* level)
                         target = 0;
                     } else {
 
-                        int d0 = level->getBrightness(*layer, x - 1, y, z);
-                        int d1 = level->getBrightness(*layer, x + 1, y, z);
-                        int d2 = level->getBrightness(*layer, x, y - 1, z);
-                        int d3 = level->getBrightness(*layer, x, y + 1, z);
-                        int d4 = level->getBrightness(*layer, x, y, z - 1);
-                        int d5 = level->getBrightness(*layer, x, y, z + 1);
+                        int d0 = chunkXNeg->getBrightness(*layer, (x - 1) & 15, y, z & 15);
+                        int d1 = chunkXPos->getBrightness(*layer, (x + 1) & 15, y, z & 15);
+                        int d2 = cachedChunk->getBrightness(*layer, x & 15, y - 1, z & 15);
+                        int d3 = cachedChunk->getBrightness(*layer, x & 15, y + 1, z & 15);
+                        int d4 = chunkZNeg->getBrightness(*layer, x & 15, y, (z - 1) & 15);
+                        int d5 = chunkZPos->getBrightness(*layer, x & 15, y, (z + 1) & 15);
 
                         target = d0;
                         if (d1 > target) target = d1;
@@ -142,7 +149,7 @@ void LightUpdate::update(Level* level)
 
 
                     if (old != target) {
-                        level->setBrightness(*layer, x, y, z, target);
+                        cachedChunk->setBrightness(*layer, x & 15, y, z & 15, target);
                         int t = target - 1;
                         if (t < 0) t = 0;
                         level->updateLightIfOtherThan(*layer, x - 1, y, z, t);
