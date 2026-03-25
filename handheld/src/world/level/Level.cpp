@@ -1496,15 +1496,18 @@ void Level::tick(Entity* e, bool actual) {
     int xc = Mth::floor(e->x);
     int zc = Mth::floor(e->z);
     int r = 32;
-    if (actual && !hasChunksAt(xc - r, 0, zc - r, xc + r, 128, zc + r)) {
-        return;
-    }
 
+    // Save positions BEFORE the chunk check to ensure interpolation values
+    // are always updated, preventing jitter when chunks are loading/unloading
     e->xOld = e->x;
     e->yOld = e->y;
     e->zOld = e->z;
     e->yRotO = e->yRot;
     e->xRotO = e->xRot;
+
+    if (actual && !hasChunksAt(xc - r, 0, zc - r, xc + r, 128, zc + r)) {
+        return;
+    }
 
     if (actual && e->inChunk) {
         e->tick();
