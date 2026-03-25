@@ -23,6 +23,7 @@
         #endif
     #endif
 #else
+	#define USE_VBO
     // Uglyness to fix redeclaration issues
     #ifdef WIN32
 	   #include <WinSock2.h>

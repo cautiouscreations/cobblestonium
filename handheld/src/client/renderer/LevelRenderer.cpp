@@ -77,7 +77,12 @@ LevelRenderer::LevelRenderer( Minecraft* mc)
 #else
 	int maxChunksWidth = 1024 / CHUNK_SIZE;
 	numListsOrBuffers = maxChunksWidth * maxChunksWidth * (128/CHUNK_SIZE) * 3;
-	chunkLists = glGenLists(numListsOrBuffers);
+	#ifdef USE_VBO
+		chunkBuffers = new GLuint[numListsOrBuffers];
+		glGenBuffers2(numListsOrBuffers, chunkBuffers);
+	#else
+		chunkLists = glGenLists(numListsOrBuffers);
+	#endif
 #endif
 }
 
@@ -93,7 +98,12 @@ LevelRenderer::~LevelRenderer()
 	glDeleteBuffers(1, &skyBuffer);
 	delete[] chunkBuffers;
 #else
-	glDeleteLists(numListsOrBuffers, chunkLists);
+	#ifdef USE_VBO
+		glDeleteBuffers(numListsOrBuffers, chunkBuffers);
+		delete[] chunkBuffers;
+	#else
+		glDeleteLists(numListsOrBuffers, chunkLists);
+	#endif
 #endif
 }
 
@@ -191,7 +201,11 @@ void LevelRenderer::allChanged()
 		for (int y = 0; y < yChunks; y++) {
 			for (int z = 0; z < zChunks; z++) {
 				const int c = getLinearCoord(x, y, z);
-				Chunk* chunk = new Chunk(level, x * CHUNK_SIZE, y * CHUNK_SIZE, z * CHUNK_SIZE, CHUNK_SIZE, chunkLists + id, &chunkBuffers[id]);
+				#ifdef USE_VBO
+				Chunk* chunk = new Chunk(level, x * CHUNK_SIZE, y * CHUNK_SIZE, z * CHUNK_SIZE, CHUNK_SIZE, 0, &chunkBuffers[id * 3]);
+			#else
+				Chunk* chunk = new Chunk(level, x * CHUNK_SIZE, y * CHUNK_SIZE, z * CHUNK_SIZE, CHUNK_SIZE, chunkLists + id, NULL);
+			#endif
 
 				if (occlusionCheck) {
 					chunk->occlusion_id = 0;//occlusionCheckIds.get(count);

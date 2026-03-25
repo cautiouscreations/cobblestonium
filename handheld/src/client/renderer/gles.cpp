@@ -47,7 +47,7 @@ void glInit()
 }
 
 void anGenBuffers(GLsizei n, GLuint* buffers) {
-#if defined(__EMSCRIPTEN__)
+#if defined(__EMSCRIPTEN__) || !defined(OPENGL_ES)
 	glGenBuffers(n, buffers);
 #else
 	static GLuint k = 1;
