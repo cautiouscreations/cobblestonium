@@ -252,6 +252,7 @@ void Inventory::setupDefault() {
 #endif
 		addItem(new ItemInstance(Item::bow));
 		addItem(new ItemInstance(Item::sign));
+		addItem(new ItemInstance(Item::flintAndSteel));
 	} else {
 #if defined(WIN32)
 		// Survival
