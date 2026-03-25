@@ -320,6 +320,19 @@ void ExternalFileLevelStorage::markUnsaved(LevelChunk* chunk)
 	}
 }
 
+void ExternalFileLevelStorage::removeFromUnsavedList(LevelChunk* chunk)
+{
+	UnsavedChunkList::iterator it = unsavedChunkList.begin();
+	for ( ; it != unsavedChunkList.end(); ++it)
+	{
+		if ((*it).chunk == chunk)
+		{
+			unsavedChunkList.erase(it);
+			break;
+		}
+	}
+}
+
 RegionFile* ExternalFileLevelStorage::getRegionFile(int x, int z, bool forEntities) {
     int rx = x >> 5;
     int rz = z >> 5;
@@ -349,10 +362,10 @@ void ExternalFileLevelStorage::save(Level* level, LevelChunk* levelChunk)
 	// Write chunk
 	RakNet::BitStream chunkData;
 	chunkData.Write((const char*)levelChunk->getBlockData(), CHUNK_BLOCK_COUNT);
-	chunkData.Write((const char*)levelChunk->data.data, CHUNK_BLOCK_COUNT / 2);
+	chunkData.Write((const char*)levelChunk->data.getData(), CHUNK_BLOCK_COUNT / 2);
 
-	chunkData.Write((const char*)levelChunk->skyLight.data, CHUNK_BLOCK_COUNT / 2);
-	chunkData.Write((const char*)levelChunk->blockLight.data, CHUNK_BLOCK_COUNT / 2);
+	chunkData.Write((const char*)levelChunk->skyLight.getData(), CHUNK_BLOCK_COUNT / 2);
+	chunkData.Write((const char*)levelChunk->blockLight.getData(), CHUNK_BLOCK_COUNT / 2);
 
 	chunkData.Write((const char*)levelChunk->updateMap, CHUNK_COLUMNS);
 
@@ -382,10 +395,10 @@ LevelChunk* ExternalFileLevelStorage::load(Level* level, int x, int z)
 	chunkData->Read((char*)blockIds, CHUNK_BLOCK_COUNT);
 
 	LevelChunk* levelChunk = new LevelChunk(level, blockIds, x, z);
-	chunkData->Read((char*)levelChunk->data.data, CHUNK_BLOCK_COUNT / 2);
+	chunkData->Read((char*)levelChunk->data.getData(), CHUNK_BLOCK_COUNT / 2);
 	if (loadedStorageVersion >= ChunkVersion_Light) {
-		chunkData->Read((char*)levelChunk->skyLight.data, CHUNK_BLOCK_COUNT / 2);
-		chunkData->Read((char*)levelChunk->blockLight.data, CHUNK_BLOCK_COUNT / 2);
+		chunkData->Read((char*)levelChunk->skyLight.getData(), CHUNK_BLOCK_COUNT / 2);
+		chunkData->Read((char*)levelChunk->blockLight.getData(), CHUNK_BLOCK_COUNT / 2);
 	}
 	chunkData->Read((char*)levelChunk->updateMap, CHUNK_COLUMNS);
 	// This will be difficult to maintain.. Storage version could be per chunk

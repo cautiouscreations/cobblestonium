@@ -8,6 +8,7 @@
 #include "EmptyLevelChunk.h"
 #include "../Level.h"
 #include "../LevelConstants.h"
+#include <vector>
 
 class ChunkCache: public ChunkSource {
     //static const int CHUNK_CACHE_WIDTH = CHUNK_CACHE_WIDTH; // WAS 32;
@@ -40,6 +41,21 @@ public:
 				delete chunks[i];
 			}
 		}
+		
+		// Clean up any deferred deletions (also removes from unsaved list)
+		flushDeferredDeletions();
+	}
+	
+	void flushDeferredDeletions() {
+		for (LevelChunk* chunk : deferredDeletions)
+		{
+			if (storage != NULL) {
+				storage->removeFromUnsavedList(chunk);
+			}
+			chunk->deleteBlockData();
+			delete chunk;
+		}
+		deferredDeletions.clear();
 	}
 
     bool fits(int x, int z) {
@@ -70,11 +86,21 @@ public:
         }
         if (!hasChunk(x, z)) {
             if (chunks[slot] != NULL) {
-                chunks[slot]->unload();
-                save(chunks[slot]);
+                LevelChunk* oldChunk = chunks[slot];
+                oldChunk->unload();
+                save(oldChunk);
                 savingEntities = true;
-                saveEntities(chunks[slot]);
+                saveEntities(oldChunk);
                 savingEntities = false;
+                // Defer deletion to avoid use-after-free during nested chunk loading
+                deferredDeletions.push_back(oldChunk);
+                // Clear cache if it points to the chunk being replaced
+                if (last == oldChunk) {
+                    last = NULL;
+                    xLast = -999999999;
+                    zLast = -999999999;
+                }
+                chunks[slot] = NULL;
             }
 
             LevelChunk* newChunk = load(x, z);
@@ -125,6 +151,9 @@ public:
 
 		//sw.stop();
 		//sw.printEvery(500000, "ChunkCache::load: ");
+
+		// Flush deferred deletions now that it's safe
+		flushDeferredDeletions();
 
         return chunks[slot];
     }
@@ -259,6 +288,8 @@ private:
     LevelChunk* last;
     
     bool savingEntities;
+    
+    std::vector<LevelChunk*> deferredDeletions;
 
 };
 

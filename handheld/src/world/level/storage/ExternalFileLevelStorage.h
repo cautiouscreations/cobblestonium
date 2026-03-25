@@ -71,8 +71,9 @@ public:
 	void saveGame(Level* level);
     void saveAll(Level* level, std::vector<LevelChunk*>& levelChunks);
 
-	virtual void tick();
+    virtual void tick();
 	virtual void markUnsaved(LevelChunk* levelChunk);
+	virtual void removeFromUnsavedList(LevelChunk* levelChunk);
 	virtual void flush() {}
 private:
     RegionFile* getRegionFile(int x, int z, bool forEntities);

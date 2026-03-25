@@ -28,6 +28,7 @@ public:
     
 	virtual void tick() {}
 	virtual void markUnsaved(LevelChunk* levelChunk) {}
+	virtual void removeFromUnsavedList(LevelChunk* levelChunk) {}
 	virtual void flush() {}
 };
 

@@ -4,30 +4,28 @@
 //package net.minecraft.world.level.chunk;
 
 #include <cstring>
+#include <memory>
 
 class DataLayer
 {
 public:
 	DataLayer()
-	:	data(NULL),
-		length(0)
+	:	length(0),
+		slotMax(0)
 	{}
 
     DataLayer(int length) {
 		this->length = length >> 1;
-		data = new unsigned char[this->length];
+		data.reset(new unsigned char[this->length]);
 		setAll(0);
 		slotMax = this->length;
     }
 
     DataLayer(unsigned char* data, int length) {
 		this->length = length >> 1;
-        this->data = data;
+        this->data.reset(data);
+		slotMax = this->length;
     }
-
-	~DataLayer() {
-		delete[] data;
-	}
 
     int get(int x, int y, int z) {
         return get(x << 11 | z << 7 | y);
@@ -59,15 +57,18 @@ public:
 	}
 
     bool isValid() {
-        return data != NULL;
+        return data != nullptr;
     }
 
     void setAll(int br) {
         unsigned char val = (br & (br << 4));
-		memset(data, val, length);
+		memset(data.get(), val, length);
     }
 
-	unsigned char* data;
+	// Access the raw pointer for compatibility with existing code
+	unsigned char* getData() const { return data.get(); }
+
+	std::unique_ptr<unsigned char[]> data;
 	int length;
 	int slotMax;
 };

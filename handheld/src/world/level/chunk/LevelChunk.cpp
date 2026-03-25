@@ -641,7 +641,7 @@ int LevelChunk::getBlocksAndData( unsigned char* data, int x0, int y0, int z0, i
 	for (int x = x0; x < x1; x++)
 	for (int z = z0; z < z1; z++) {
 		int slot = (x << 11 | z << 7 | y0) >> 1;
-		memcpy(data + p, this->data.data + slot, len); //System.arraycopy(this->data.data, slot, data, p, len);
+		memcpy(data + p, this->data.getData() + slot, len); //System.arraycopy(this->data.data, slot, data, p, len);
 		p += len;
 	}
 
@@ -649,7 +649,7 @@ int LevelChunk::getBlocksAndData( unsigned char* data, int x0, int y0, int z0, i
 	for (int x = x0; x < x1; x++)
 	for (int z = z0; z < z1; z++) {
 		int slot = (x << 11 | z << 7 | y0) >> 1;
-		memcpy(data + p, blockLight.data + slot, len); //System.arraycopy(blockLight.data, slot, data, p, len);
+		memcpy(data + p, blockLight.getData() + slot, len); //System.arraycopy(blockLight.data, slot, data, p, len);
 		p += len;
 	}
 
@@ -657,7 +657,7 @@ int LevelChunk::getBlocksAndData( unsigned char* data, int x0, int y0, int z0, i
 	for (int x = x0; x < x1; x++)
 	for (int z = z0; z < z1; z++) {
 		int slot = (x << 11 | z << 7 | y0) >> 1;
-		memcpy(data + p, skyLight.data + slot, len); //System.arraycopy(skyLight.data, slot, data, p, len);
+		memcpy(data + p, skyLight.getData() + slot, len); //System.arraycopy(skyLight.data, slot, data, p, len);
 		p += len;
 	}
 
@@ -680,7 +680,7 @@ int LevelChunk::setBlocksAndData( unsigned char* data, int x0, int y0, int z0, i
 	for (int x = x0; x < x1; x++)
 	for (int z = z0; z < z1; z++) {
 		int slot = (x << 11 | z << 7 | y0) >> 1;
-		memcpy(this->data.data + slot, data + p, len); //System.arraycopy(data, p, this->data.data, slot, len);
+		memcpy(this->data.getData() + slot, data + p, len); //System.arraycopy(data, p, this->data.data, slot, len);
 		p += len;
 	}
 
@@ -688,7 +688,7 @@ int LevelChunk::setBlocksAndData( unsigned char* data, int x0, int y0, int z0, i
 	for (int x = x0; x < x1; x++)
 	for (int z = z0; z < z1; z++) {
 		int slot = (x << 11 | z << 7 | y0) >> 1;
-		memcpy(blockLight.data + slot, data + p, len); //System.arraycopy(data, p, blockLight.data, slot, len);
+		memcpy(blockLight.getData() + slot, data + p, len); //System.arraycopy(data, p, blockLight.data, slot, len);
 		p += len;
 	}
 
@@ -696,7 +696,7 @@ int LevelChunk::setBlocksAndData( unsigned char* data, int x0, int y0, int z0, i
 	for (int x = x0; x < x1; x++)
 	for (int z = z0; z < z1; z++) {
 		int slot = (x << 11 | z << 7 | y0) >> 1;
-		memcpy(skyLight.data + slot, data + p, len); //System.arraycopy(data, p, skyLight.data, slot, len);
+		memcpy(skyLight.getData() + slot, data + p, len); //System.arraycopy(data, p, skyLight.data, slot, len);
 		p += len;
 	}
 
