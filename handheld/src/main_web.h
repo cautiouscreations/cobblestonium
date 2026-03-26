@@ -54,6 +54,10 @@ EM_JS(void, web_setup_canvas_and_logs, (), {
         return;
     }
 
+    if (!canvas.id) {
+        canvas.id = 'canvas';
+    }
+
     canvas.style.display = 'block';
     canvas.style.width = '100vw';
     canvas.style.height = '100vh';
@@ -435,7 +439,7 @@ static int handleEvents() {
             Mouse::feed(button, 1, event.button.x, event.button.y);
             Multitouch::feed(button, 1, event.button.x, event.button.y, 0);
             if (left && !g_pointerLockActive) {
-                emscripten_request_pointerlock(NULL, EM_TRUE);
+                emscripten_request_pointerlock("#canvas", EM_TRUE);
             }
         }
 

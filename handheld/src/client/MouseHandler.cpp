@@ -39,7 +39,7 @@ void MouseHandler::grab() {
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 	SDL_ShowCursor(SDL_DISABLE);
 #elif defined(WEB)
-	emscripten_request_pointerlock(NULL, EM_TRUE);
+	emscripten_request_pointerlock("#canvas", EM_TRUE);
 #endif
 }
 
